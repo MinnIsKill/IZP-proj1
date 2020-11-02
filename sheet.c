@@ -51,13 +51,13 @@ cavg C N M - obdobne jako csum, avsak vysledna hodnota predstavuje aritmeticky p
 cmin C N M - obdobne jako csum, avsak vysledna hodnota predstavuje nejmensi nalezenou hodnotu.
 cmax C N M - obdobne jako cmin, jedna se vsak o maximalni nalezenou hodnotu.
 ccount C N M - obdobne jako csum, avsak vysledna hodnota predstavuje pocet neprazdnych hodnot danych bunek.
-cseq N M B - do buněk ve sloupcích N až M včetně vloží postupně rostoucí čísla (o jedničku) počínaje hodnotou B.
-rseq C N M B - ve sloupci C do buněk každého řádku od řádku N po řádek M včetně vloží rostoucí čísla počínaje hodnotou B. Číslo M může být nahrazeno pomlčkou. V takovém případě se tím myslí poslední řádek souboru.
-rsum C N M - do buňky ve sloupci C na řádku M+1 vloží součet hodnot buněk ve sloupci C na řádcích N až M včetně.
-ravg C N M - obdobně jako rsum, avšak výsledná hodnota představuje aritmetický průměr.
-rmin C N M - obdobně jako rsum, avšak výsledná hodnota představuje nejmenší hodnotu.
-rmax C N M - obdobně jako rsum, avšak výsledná hodnota představuje největší hodnotu.
-rcount C N M - obdobně jako rsum, avšak výsledná hodnota představuje počet neprázdnných hodnot daných buněk.
+cseq N M B - do bunek ve sloupcich N az M vcetne vlozi postupne rostouci cisla (o jednicku) pocinaje hodnotou B.
+rseq C N M B - ve sloupci C do buněk každého řádku od řádku N po řádek M včetně vloží rostoucí cisla pocinaje hodnotou B. Cislo M muze byt nahrazeno pomlckou. V takovem pripade se tim mysli posledni radek souboru.
+rsum C N M - do bunky ve sloupci C na radku M+1 vlozi soucet hodnot bunek ve sloupci C na radcich N az M vcetne.
+ravg C N M - obdobne jako rsum, avsak vysledna hodnota predstavuje aritmeticky prumer.
+rmin C N M - obdobne jako rsum, avsak vysledna hodnota predstavuje nejmensi hodnotu.
+rmax C N M - obdobne jako rsum, avsak vysledna hodnota predstavuje nejvetsi hodnotu.
+rcount C N M - obdobne jako rsum, avsak vysledna hodnota predstavuje pocet neprazdnych hodnot danych bunek.
 
 **/
 
