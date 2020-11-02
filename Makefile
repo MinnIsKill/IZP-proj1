@@ -3,10 +3,10 @@
 
   # compiler flags:
   #  -g    		adds debugging information to the executable file
-  #  -std=c99	
+  #  -std=c99	lets the compiler know that we're using the standard version of C (C99)
   #  -Wall 		turns on most, but not all, compiler warnings
-  #  -Wextra	
-  #  -Werror	
+  #  -Wextra	turns on the rest of compiler warnings
+  #  -Werror	treats warnings as errors
   CFLAGS  = -std=c99 -Wall -Wextra -Werror
 
   # the build target executable:
@@ -15,7 +15,7 @@
   all: $(TARGET)
 
   $(TARGET): $(TARGET).c
-  	$(CC) $(CFLAGS) $(TARGET).c -o $(TARGET)
+	$(CC) $(CFLAGS) $(TARGET).c -o $(TARGET)
 
   clean:
-  	$(RM) $(TARGET)
+	$(RM)	$(TARGET)
