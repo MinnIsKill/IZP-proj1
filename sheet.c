@@ -15,11 +15,11 @@ ignorovan. Prvni znak z retezce DELIM bude take pouzit jako oddelovac vystupnich
 *******************
 *  Uprava tabulky
 *******************
--Prikazu pro upravu tabulky muze byt zadano vice. V takovem pripade budou zadany jako sekvence vice argumentu prikazove radky:
+--> Prikazu pro upravu tabulky muze byt zadano vice. V takovem pripade budou zadany jako sekvence vice argumentu prikazove radky:
 
 Prikazy pro upravu tabulky:
 
-irow R - vlozi radek tabulky pred radek R > 0 (insert-row).
+///irow R - vlozi radek tabulky pred radek R > 0 (insert-row).
 arow - prida novy radek tabulky na konec tabulky (append-row).
 drow R - odstrani radek cislo R > 0 (delete-row).
 drows N M - odstrani radky N až M (N <= M). V případě N=M se příkaz chová stejně jako drow N.
@@ -31,7 +31,7 @@ dcols N M - odstrani sloupce N az M (N <= M). V pripade N=M se prikaz chova stej
 *******************
 *  Zpracovani dat
 *******************
--Zpracovanu dat predstavuje upravy obsahu jednotlivych bunek tabulky. Kazde spusteni programu muze obsahovat nejvice jeden prikaz pro zpracovani dat. 
+--> Zpracovanu dat predstavuje upravy obsahu jednotlivych bunek tabulky. Kazde spusteni programu muze obsahovat nejvice jeden prikaz pro zpracovani dat. 
 
 Prikazy pro zpracovani dat:
 
@@ -61,7 +61,7 @@ rcount C N M - obdobne jako rsum, avsak vysledna hodnota predstavuje pocet nepra
 
 **/
 
-int main(int argc, char *argv[])
+int main()
 {
     printf("Neco tu jako musi prozatim byt no...\n");
     return 0;
