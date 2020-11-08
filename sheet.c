@@ -1,21 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-/** TODO: 
+#define MAX 100
+
+/** TODO:.
 
 Uprava velikosti tabulky:
 ./sheet [-d DELIM] [Prikazy pro upravu tabulky]
 nebo zpracovani dat:
 ./sheet [-d DELIM] [Selekce radku] [Prikaz pro zpracovani dat]
 
---> Argument -d specifikuje, jake znaky lze interpretovat jako oddelovace jednotlivych bunek. Kazdy znak ve vstupnim radku, ktery je obsazen v retezci DELIM, 
+Argument -d specifikuje, jake znaky lze interpretovat jako oddelovace jednotlivych bunek. Kazdy znak ve vstupnim radku, ktery je obsazen v retezci DELIM, 
 se chova jako oddelovac dvou sousedicich bunek. Ve vychozim nastaveni je DELIM retezec obsahujici mezeru. Vicenasobny vyskyt stejnych znaku v retezci DELIM je 
 ignorovan. Prvni znak z retezce DELIM bude take pouzit jako oddelovac vystupnich hodnot.
 
-*******************
-*  Uprava tabulky
-*******************
---> Prikazu pro upravu tabulky muze byt zadano vice. V takovem pripade budou zadany jako sekvence vice argumentu prikazove radky:
+==================
+  Uprava tabulky
+==================
+
+Prikazu pro upravu tabulky muze byt zadano vice. V takovem pripade budou zadany jako sekvence vice argumentu prikazove radky:
 
 Prikazy pro upravu tabulky:
 
@@ -28,10 +32,11 @@ acol - prida prazdny sloupec za posledni sloupec.
 dcol C - odstrani sloupec cislo C.
 dcols N M - odstrani sloupce N az M (N <= M). V pripade N=M se prikaz chova stejne jako dcol N.
 
-*******************
-*  Zpracovani dat
-*******************
---> Zpracovanu dat predstavuje upravy obsahu jednotlivych bunek tabulky. Kazde spusteni programu muze obsahovat nejvice jeden prikaz pro zpracovani dat. 
+==================
+  Zpracovani dat
+==================
+
+Zpracovanu dat predstavuje upravy obsahu jednotlivych bunek tabulky. Kazde spusteni programu muze obsahovat nejvice jeden prikaz pro zpracovani dat. 
 
 Prikazy pro zpracovani dat:
 
@@ -61,11 +66,55 @@ rcount C N M - obdobne jako rsum, avsak vysledna hodnota predstavuje pocet nepra
 
 **/
 
+
 /// VSCode Keybind-sheet:  CTRL+SHIFT+B -> BUILD  |  F5 -> DEBUG
 
 int main(int argc, char *argv[])
 {
+    if (argc <= 2){
+        printf("Insufficient amount of input parameters.\n");
+        return 1;
+    }
+
+    char delim[MAX]; //array for delimiters
+    delim[0] = ' '; //set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
+
+    if (strcmp(argv[1], "-d") != 0){
+        printf("Error: Expecting '-d', received %s.\n", argv[1]);
+        return 1;
+    } else { //initialize delimiter var as a 1D array and load delimiters from input arguments
+        if (strcmp(argv[2], "irow") != 0 && strcmp(argv[2], "arow") != 0 && strcmp(argv[2], "drow") != 0 && strcmp(argv[2], "drows") != 0 && strcmp(argv[2], "icol") != 0 && strcmp(argv[2], "acol") != 0 && strcmp(argv[2], "dcol") != 0 && strcmp(argv[2], "dcols") != 0){
+            strcpy(delim, argv[2]);
+            printf ("argv[2] is %s \n",argv[2]);        //! REMEMBER TO
+            printf ("delim is %s \n",delim);            //! DELETE THESE
+            printf ("delim[0] is %c \n",delim[0]);      //! LATER ON
+            printf ("delim[1] is %c \n",delim[1]);      //! YOU MONKEY
+        }
+    }
     
-    printf("Neco tu jako musi prozatim byt no...\n");
+    for (int i = 3; i < argc; i++) //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
+    {
+        if (strcmp(argv[i], "irow") == 0){
+            printf("irow reached.\n");
+        } else if (strcmp(argv[i], "arow") == 0){
+            printf("arow reached.\n");
+        } else if (strcmp(argv[i], "drow") == 0){
+            printf("drow reached.\n");
+        } else if (strcmp(argv[i], "drows") == 0){
+            printf("drows reached.\n");
+        } else if (strcmp(argv[i], "icol") == 0){
+            printf("icol reached.\n");
+        } else if (strcmp(argv[i], "acol") == 0){
+            printf("acol reached.\n");
+        } else if (strcmp(argv[i], "dcol") == 0){
+            printf("dcol reached.\n");
+        } else if (strcmp(argv[i], "dcols") == 0){
+            printf("dcols reached.\n");
+        } else {
+            printf("Error: Command not found.\n");
+        }
+    }
+
+    printf("Hurray! I reached the end!\n");
     return 0;
 }
