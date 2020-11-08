@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define MAX 100
 
@@ -66,8 +67,13 @@ rcount C N M - obdobne jako rsum, avsak vysledna hodnota predstavuje pocet nepra
 
 **/
 
-
-/// VSCode Keybind-sheet:  CTRL+SHIFT+B -> BUILD  |  F5 -> DEBUG
+/**     LORD GIVE ME THE MENTAL CAPACITY TO REMEMBER THESE, but in the meantime, this cheatsheet should suffice.
+GitHub commit flow: $ git add .
+                    $ git commit -m "message"
+                    $ git push --set-upstream origin main   (where 'main' is name of branch to commit to)
+ VSCode Keybind-sheet:  CTRL+SHIFT+B -> BUILD
+                        F5 -> DEBUG
+**/
 
 int main(int argc, char *argv[])
 {
@@ -75,6 +81,8 @@ int main(int argc, char *argv[])
         printf("Insufficient amount of input parameters.\n");
         return 1;
     }
+
+    bool flag = false;
 
     char delim[MAX]; //array for delimiters
     delim[0] = ' '; //set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
@@ -110,11 +118,41 @@ int main(int argc, char *argv[])
             printf("dcol reached.\n");
         } else if (strcmp(argv[i], "dcols") == 0){
             printf("dcols reached.\n");
-        } else {
-            printf("Error: Command not found.\n");
+        }
+        if (flag == false){
+            if (strcmp(argv[i], "cset") == 0){
+                printf("cset reached.\n");
+                flag = true;
+            } else if (strcmp(argv[i], "tolower") == 0){
+                printf("tolower reached.\n");
+                flag = true;
+            } else if (strcmp(argv[i], "toupper") == 0){
+                printf("toupper reached.\n");
+                flag = true;
+            } else if (strcmp(argv[i], "round") == 0){
+                printf("round reached.\n");
+                flag = true;
+            } else if (strcmp(argv[i], "int") == 0){
+                printf("int reached.\n");
+                flag = true;
+            } else if (strcmp(argv[i], "copy") == 0){
+                printf("copy reached.\n");
+                flag = true;
+            } else if (strcmp(argv[i], "swap") == 0){
+                printf("swap reached.\n");
+                flag = true;
+            } else if (strcmp(argv[i], "move") == 0){
+                printf("move reached.\n");
+                flag = true;
+            }
         }
     }
 
-    printf("Hurray! I reached the end!\n");
+
+
+
+    
+
+    printf("Hooray! I reached the end!\n");
     return 0;
 }
