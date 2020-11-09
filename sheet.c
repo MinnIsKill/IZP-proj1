@@ -76,6 +76,19 @@ GitHub commit flow: $ git add .
                         F5 -> DEBUG
 **/
 
+
+/** V zadanem retezci prevedte mala pismena na velka
+    int diff = 'a' - 'A';
+
+    int i = 0;
+    while (str[i] != '\0'){
+        if (str[i] >= 'a' && str[i] <= 'z'){
+            str[i] = str[i] - diff;
+        }
+        i++;
+    }
+**/
+
 void random_func(char *row){
     printf("%s", row);
 }
@@ -118,7 +131,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    bool flag = false;
+    //bool flag1 = false;
+    bool flag2 = false;
 
     char delim[MAX];    // array for delimiters
     //char delim_first;   // first char of delim string, supposed to be used as a separator in final file
@@ -126,6 +140,18 @@ int main(int argc, char *argv[])
 
     char row[MAX_ROW_LENGTH];
     char comms[100];
+
+    int to, from = 0; // for rows selection
+    while (fgets(row, MAX_ROW_LENGTH, stdin) != NULL){
+        to++;}
+
+    bool beginswith_flag = false;
+    int beginswith_col;
+    char beginswith_str[10];
+
+    bool contains_flag = false;
+    int contains_col;
+    char contains_str[10];
 
     if (strcmp(argv[1], "-d") != 0){
         printf("Error: Expecting '-d', received %s.\n", argv[1]);
@@ -145,7 +171,18 @@ int main(int argc, char *argv[])
   
     for (int i = 3; i < argc; i++) //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
     {
-        if (strcmp(argv[i], "irow") == 0){
+        if (strcmp(argv[i], "rows") == 0){
+            from = atoi(argv[i+1]);
+            to = atoi(argv[i+2]);
+        } else if (strcmp(argv[i], "beginswith") == 0){
+            beginswith_flag = true;
+            beginswith_col = atoi(argv[i+1]);
+            strcpy(beginswith_str, argv[i+2]);
+        } else if (strcmp(argv[i], "contains") == 0){
+            contains_flag = true;
+            contains_col = atoi(argv[i+1]);
+            strcpy(contains_str, argv[i+2]);
+        } else if (strcmp(argv[i], "irow") == 0){
             strncat(comms, "irow\n", 6);
             strncat(comms, argv[i+1], 5);
             strncat(comms, "\n", 2);
@@ -169,45 +206,59 @@ int main(int argc, char *argv[])
             printf("dcol reached.\n");
         } else if (strcmp(argv[i], "dcols") == 0){
             printf("dcols reached.\n");
-        }
-        if (flag == false){
+        } else if (flag2 == false){
             if (strcmp(argv[i], "cset") == 0){
                 printf("cset reached.\n");
-                flag = true;
+                flag2 = true;
             } else if (strcmp(argv[i], "tolower") == 0){
                 printf("tolower reached.\n");
-                flag = true;
+                flag2 = true;
             } else if (strcmp(argv[i], "toupper") == 0){
                 printf("toupper reached.\n");
-                flag = true;
+                flag2 = true;
             } else if (strcmp(argv[i], "round") == 0){
                 printf("round reached.\n");
-                flag = true;
+                flag2 = true;
             } else if (strcmp(argv[i], "int") == 0){
                 printf("int reached.\n");
-                flag = true;
+                flag2 = true;
             } else if (strcmp(argv[i], "copy") == 0){
                 printf("copy reached.\n");
-                flag = true;
+                flag2 = true;
             } else if (strcmp(argv[i], "swap") == 0){
                 printf("swap reached.\n");
-                flag = true;
+                flag2 = true;
             } else if (strcmp(argv[i], "move") == 0){
                 printf("move reached.\n");
-                flag = true;
+                flag2 = true;
             }
+        } else {
+            printf ("no args\n");
         }
     }
-
-    printf("commands are: %s \n\n",comms);
 
 
     while (fgets(row, MAX_ROW_LENGTH, stdin) != NULL){
+        // CHECK FOR beginswith_flag AND contains_flag !!!!!!!!!!!!
+        // AND SOMEHOW IMPLEMENT STARTING AND ENDING ROW !!!!!!!!!!
         random_func(row);
     }
 
-
-    
+/********************** 
+*** CHECKING OUTPUT **/
+    printf("commands are: %s\n",comms);
+    printf("from row %d\n",from);
+    printf("to row %d\n",to);
+    if (beginswith_flag == true){
+        printf("process only rows whose cols at number: %d\n",beginswith_col);
+        printf("begin with string: %s\n",beginswith_str);
+    }
+    if (contains_flag == true){
+        printf("process only rows whose cols at number: %d\n",contains_col);
+        printf("contain string: %s\n",contains_str);
+    }
+/** CHECKING OUTPUT ***
+**********************/
 
     printf("Hooray! I reached the end!\n");
     return 0;
