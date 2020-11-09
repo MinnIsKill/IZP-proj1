@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #define MAX 100
+#define MAX_ROW_LENGTH 10242
 
 /** TODO:.
 
@@ -75,6 +76,41 @@ GitHub commit flow: $ git add .
                         F5 -> DEBUG
 **/
 
+void random_func(char *row){
+    printf("%s", row);
+}
+
+/// remove characters in string (currently unused) ///
+void remchar(char *string, char chr){
+    int i, j = 0;
+    for (i = 0; string[i] != '\0'; i++){ /* 'i' moves through all of original 'string' */
+        if (string[i] != chr){
+            string[j++] = string[i]; /* 'j' only moves after we write a non-'chr' */
+        }
+    }
+   string[j] = '\0'; /* re-null-terminate */
+}
+
+/// remove duplicates in string ///
+char *remdup(char string[], int n){
+    int i,j,index = 0;
+    for (i = 0; i < n; i++){ // traverse through all characters
+        for (j = 0; j < i; j++){ // check if string[i] already exists (has been saved earlier)
+            if (string[i] == string[j]){
+                break;
+            }
+        }
+        if (j == i){ // if it doesn't yet exist, add it to resulting string
+            string[index++] = string[i];
+        }
+    }
+    return string;
+}
+
+
+
+
+
 int main(int argc, char *argv[])
 {
     if (argc <= 2){
@@ -84,8 +120,12 @@ int main(int argc, char *argv[])
 
     bool flag = false;
 
-    char delim[MAX]; //array for delimiters
-    delim[0] = ' '; //set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
+    char delim[MAX];    // array for delimiters
+    //char delim_first;   // first char of delim string, supposed to be used as a separator in final file
+    delim[0] = ' ';     // set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
+
+    char row[MAX_ROW_LENGTH];
+    char comms[100];
 
     if (strcmp(argv[1], "-d") != 0){
         printf("Error: Expecting '-d', received %s.\n", argv[1]);
@@ -93,23 +133,34 @@ int main(int argc, char *argv[])
     } else { //initialize delimiter var as a 1D array and load delimiters from input arguments
         if (strcmp(argv[2], "irow") != 0 && strcmp(argv[2], "arow") != 0 && strcmp(argv[2], "drow") != 0 && strcmp(argv[2], "drows") != 0 && strcmp(argv[2], "icol") != 0 && strcmp(argv[2], "acol") != 0 && strcmp(argv[2], "dcol") != 0 && strcmp(argv[2], "dcols") != 0){
             strcpy(delim, argv[2]);
-            printf ("argv[2] is %s \n",argv[2]);        //! REMEMBER TO
-            printf ("delim is %s \n",delim);            //! DELETE THESE
-            printf ("delim[0] is %c \n",delim[0]);      //! LATER ON
-            printf ("delim[1] is %c \n",delim[1]);      //! YOU MONKEY
+            int delim_len = sizeof(delim)/sizeof(delim[0]); // create a variable to save the size of the delimiters string into and calculate it
+            remdup(delim, delim_len);                       // then remove any duplicate characters
+            //delim_first = delim[0];
+            printf ("argv[2] is %s \n",argv[2]);            //! REMEMBER TO
+            printf ("delim is %s \n",delim);                //! DELETE THESE
+            printf ("delim[0] is %c \n",delim[0]);          //! LATER ON
+            printf ("delim[1] is %c \n",delim[1]);          //! YOU MONKEY
         }
     }
-    
+  
     for (int i = 3; i < argc; i++) //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
     {
         if (strcmp(argv[i], "irow") == 0){
-            printf("irow reached.\n");
+            strncat(comms, "irow\n", 6);
+            strncat(comms, argv[i+1], 5);
+            strncat(comms, "\n", 2);
         } else if (strcmp(argv[i], "arow") == 0){
-            printf("arow reached.\n");
+            strncat(comms, "arow\n", 6);
         } else if (strcmp(argv[i], "drow") == 0){
-            printf("drow reached.\n");
+            strncat(comms, "drow\n", 6);
+            strncat(comms, argv[i+1], 5);
+            strncat(comms, "\n", 2);
         } else if (strcmp(argv[i], "drows") == 0){
-            printf("drows reached.\n");
+            strncat(comms, "drows\n", 7);
+            strncat(comms, argv[i+1], 5);
+            strncat(comms, "\n", 2);
+            strncat(comms, argv[i+2], 5);
+            strncat(comms, "\n", 2);
         } else if (strcmp(argv[i], "icol") == 0){
             printf("icol reached.\n");
         } else if (strcmp(argv[i], "acol") == 0){
@@ -148,7 +199,12 @@ int main(int argc, char *argv[])
         }
     }
 
+    printf("commands are: %s \n\n",comms);
 
+
+    while (fgets(row, MAX_ROW_LENGTH, stdin) != NULL){
+        random_func(row);
+    }
 
 
     
