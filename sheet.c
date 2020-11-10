@@ -6,8 +6,9 @@
 #define MAX 100
 #define MAX_ROW_LENGTH 10242
 
-/** TODO:.
+/** TODO:
 
+SYNTAX SPOUSTENI~
 Uprava velikosti tabulky:
 ./sheet [-d DELIM] [Prikazy pro upravu tabulky]
 nebo zpracovani dat:
@@ -100,21 +101,23 @@ typedef struct {
     bool contains;
 } flags_t;
 
-void print_stdin(char *row){
-    printf("%s", row);
+
+
+void print_stdin(char* row){
+    printf("%s",row);
 }
 
-void check_rowselect(int i, char *argv[], flags_t flags, int* to, int* from, int* beginswith_col, char beginswith_str[], int* contains_col, char contains_str[]){
+void check_rowselect(int i, char *argv[], flags_t* flags, int* to, int* from, int* beginswith_col, char beginswith_str[], int* contains_col, char contains_str[]){
     if (strcmp(argv[i], "rows") == 0){
-        flags.rows = true;
+        flags->rows = true;
         *from = atoi(argv[i+1]);
         *to = atoi(argv[i+2]);
     } else if (strcmp(argv[i], "beginswith") == 0){
-        flags.beginswith = true;
+        flags->beginswith = true;
         *beginswith_col = atoi(argv[i+1]);
         strcpy(&beginswith_str[0], argv[i+2]);
     } else if (strcmp(argv[i], "contains") == 0){
-        flags.contains = true;
+        flags->contains = true;
         *contains_col = atoi(argv[i+1]);
         strcpy(&contains_str[0], argv[i+2]);
     }
@@ -164,16 +167,13 @@ int main(int argc, char *argv[])
     bool flag2 = false;
 
     char delim[MAX];    // array for delimiters
-    //char delim_first;   // first char of delim string, supposed to be used as a separator in final file
+    //char delim_first[2];   // first char of delim string, supposed to be used as a separator in final file
     delim[0] = ' ';     // set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
 
     char row[MAX_ROW_LENGTH];
     char comms[100];
 
-    int to, from = 0; // for rows selection
-    while (fgets(row, MAX_ROW_LENGTH, stdin) != NULL){
-        to++;
-    }
+    int from, to = 0; // for rows selection
 
     int beginswith_col;
     char beginswith_str[10];
@@ -182,33 +182,89 @@ int main(int argc, char *argv[])
     char contains_str[10];
 
 
-    check_rowselect(3, argv, flags, &to, &from, &beginswith_col, beginswith_str, &contains_col, contains_str); // TRY TO MERGE THE COL AND STR VARIABLES IN HERE IN THE FUTURE!!!
+    check_rowselect(3, argv, &flags, &to, &from, &beginswith_col, beginswith_str, &contains_col, contains_str); // TRY TO MERGE THE COL AND STR VARIABLES IN HERE IN THE FUTURE!!!
 
 
     if (strcmp(argv[1], "-d") != 0){
         fprintf(stderr,"Error: Expecting '-d', received %s.\n", argv[1]);
         return 1;
     } else { //initialize delimiter var as a 1D array and load delimiters from input arguments
-        if (strcmp(argv[2], "irow") != 0 && strcmp(argv[2], "arow") != 0 && strcmp(argv[2], "drow") != 0 && strcmp(argv[2], "drows") != 0 && strcmp(argv[2], "icol") != 0 && strcmp(argv[2], "acol") != 0 && strcmp(argv[2], "dcol") != 0 && strcmp(argv[2], "dcols") != 0){
+        if (strcmp(argv[2], "irow") != 0 && strcmp(argv[2], "arow") != 0 && strcmp(argv[2], "drow") != 0 && strcmp(argv[2], "drows") != 0 && strcmp(argv[2], "icol") != 0 && strcmp(argv[2], "acol") != 0 && strcmp(argv[2], "dcol") != 0 && strcmp(argv[2], "dcols") != 0 &&
+        strcmp(argv[2], "cset") != 0 && strcmp(argv[2], "tolower") != 0 && strcmp(argv[2], "toupper") != 0 && strcmp(argv[2], "round") != 0 && strcmp(argv[2], "int") != 0 && strcmp(argv[2], "copy") != 0 && strcmp(argv[2], "swap") != 0 && strcmp(argv[2], "move") != 0){
             strcpy(delim, argv[2]);
             int delim_len = sizeof(delim)/sizeof(delim[0]); // create a variable to save the size of the delimiters string into and calculate it
             remdup(delim, delim_len);                       // then remove any duplicate characters
-            //delim_first = delim[0];
-            printf ("argc is %i \n",argc);
-            printf ("argv[2] is %s \n",argv[2]);            //! REMEMBER TO
-            printf ("delim is %s \n",delim);                //! DELETE THESE
-            printf ("delim[0] is %c \n",delim[0]);          //! LATER ON
-            printf ("delim[1] is %c \n",delim[1]);          //! YOU MONKEY
+            //strncpy(&delim_first[0], &delim[0], 1);
+        } else {
+            fprintf(stderr,"It would appear the argument in place of the delimiter looks an awful lot like a command. \nDid you perhaps forget to enter a delimiter?\n");
+            return 1;
         }
     }
 
 
 
     while (fgets(row, MAX_ROW_LENGTH, stdin) != NULL){
+        for (int i = 3; i < argc; i++) //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
+        {
+        if (strcmp(argv[i], "irow") == 0){
+            strncat(comms, "irow\n", 6);
+            strncat(comms, argv[i+1], 5);
+            strncat(comms, "\n", 2);
+        } else if (strcmp(argv[i], "arow") == 0){
+            strncat(comms, "arow\n", 6);
+        } else if (strcmp(argv[i], "drow") == 0){
+            strncat(comms, "drow\n", 6);
+            strncat(comms, argv[i+1], 5);
+            strncat(comms, "\n", 2);
+        } else if (strcmp(argv[i], "drows") == 0){
+            strncat(comms, "drows\n", 7);
+            strncat(comms, argv[i+1], 5);
+            strncat(comms, "\n", 2);
+            strncat(comms, argv[i+2], 5);
+            strncat(comms, "\n", 2);
+        } else if (strcmp(argv[i], "icol") == 0){
+            printf("icol reached.\n");
+        } else if (strcmp(argv[i], "acol") == 0){
+            printf("acol reached.\n");
+        } else if (strcmp(argv[i], "dcol") == 0){
+            printf("dcol reached.\n");
+        } else if (strcmp(argv[i], "dcols") == 0){
+            printf("dcols reached.\n");
+        } else if (flag2 == false){
+            if (strcmp(argv[i], "cset") == 0){
+                printf("cset reached.\n");
+                flag2 = true;
+            } else if (strcmp(argv[i], "tolower") == 0){
+                printf("tolower reached.\n");
+                flag2 = true;
+            } else if (strcmp(argv[i], "toupper") == 0){
+                printf("toupper reached.\n");
+                flag2 = true;
+            } else if (strcmp(argv[i], "round") == 0){
+                printf("round reached.\n");
+                flag2 = true;
+            } else if (strcmp(argv[i], "int") == 0){
+                printf("int reached.\n");
+                flag2 = true;
+            } else if (strcmp(argv[i], "copy") == 0){
+                printf("copy reached.\n");
+                flag2 = true;
+            } else if (strcmp(argv[i], "swap") == 0){
+                printf("swap reached.\n");
+                flag2 = true;
+            } else if (strcmp(argv[i], "move") == 0){
+                printf("move reached.\n");
+                flag2 = true;
+            }
+        } else {
+            printf ("no args\n");
+        }
+    }
         // CHECK FOR beginswith_flag AND contains_flag !!!!!!!!!!!!
         // AND SOMEHOW IMPLEMENT STARTING AND ENDING ROW !!!!!!!!!!
         print_stdin(row);
     }
+
 
     for (int i = 3; i < argc; i++) //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
     {
@@ -272,20 +328,26 @@ int main(int argc, char *argv[])
 
 /********************** 
 *** CHECKING OUTPUT **/
+    printf ("\nargc is %i \n",argc);
+    printf ("argv[2] is %s \n",argv[2]);            //! REMEMBER TO
+    printf ("delim is %s \n",delim);                //! DELETE THESE
+    printf ("first delimiter, at delim[0], is %c \n",delim[0]);          //! LATER ON
+    printf ("delim[1] is %c \n",delim[1]);          //! YOU MONKEY
+    //printf ("first delimiter is %s \n",delim_first);
+
     printf("commands are: %s\n",comms);
-    printf("from row %d\n",from);
-    printf("to row %d\n",to);
+    if (flags.rows == true){
+        printf("work only from row [%d] to row [%d]\n",from,to);
+    }
     if (flags.beginswith == true){
-        printf("process only rows whose cols at number: %d\n",beginswith_col);
-        printf("begin with string: %s\n",beginswith_str);
+        printf("process only rows whose columns at number [%d] begin with string [%s]\n",beginswith_col,beginswith_str);
     }
     if (flags.contains == true){
-        printf("process only rows whose cols at number: %d\n",contains_col);
-        printf("contain string: %s\n",contains_str);
+        printf("process only rows whose columns at number [%d] contain string [%s]\n",contains_col,contains_str);
     }
 /** CHECKING OUTPUT ***
 **********************/
 
-    printf("Hooray! I reached the end!\n");
+    printf("\nHooray! I reached the end!\n");
     return 0;
 }

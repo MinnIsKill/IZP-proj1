@@ -1,0 +1,53 @@
+icol reached.
+icol reached.
+Cviceni:Bodu:Projekt
+icol reached.
+icol reached.
+Prvni programy:0:
+icol reached.
+icol reached.
+Cyklus, typy:0:
+icol reached.
+icol reached.
+Retezce:0:
+icol reached.
+icol reached.
+Funkce 1:0:
+icol reached.
+icol reached.
+Struktury:2:
+icol reached.
+icol reached.
+Ukazatele:2:
+icol reached.
+icol reached.
+Funkce:0:Obhajoba 1
+icol reached.
+icol reached.
+Malloc, dbg:2:
+icol reached.
+icol reached.
+:0:
+icol reached.
+icol reached.
+:0:
+icol reached.
+icol reached.
+Iterace, rekurze:2:
+icol reached.
+icol reached.
+:0:Obhajoba 2
+icol reached.
+icol reached.
+Dynamicke struktury:2:
+icol reached.
+icol reached.
+
+argc is 5 
+argv[2] is ::abba 
+delim is :ab 
+first delimiter, at delim[0], is : 
+delim[1] is a 
+commands are: 
+
+Hooray! I reached the end!
