@@ -72,7 +72,12 @@ rcount C N M - obdobne jako rsum, avsak vysledna hodnota predstavuje pocet nepra
 GitHub commit flow: $ git add .
                     $ git commit -m "message"
                     $ git push --set-upstream origin main   (where 'main' is name of branch to commit to)
- VSCode Keybind-sheet:  CTRL+SHIFT+B -> BUILD
+
+!!!(Forces local file overwrite)!!!
+GitHub pull flow:   $ git fetch origin main
+                    $ git reset --hard origin/main
+
+VSCode Keybind-sheet:  CTRL+SHIFT+B -> BUILD
                         F5 -> DEBUG
 **/
 
@@ -89,8 +94,30 @@ GitHub commit flow: $ git add .
     }
 **/
 
-void random_func(char *row){
+typedef struct {
+    bool rows;
+    bool beginswith;
+    bool contains;
+} flags_t;
+
+void print_stdin(char *row){
     printf("%s", row);
+}
+
+void check_rowselect(int i, char *argv[], flags_t flags, int* to, int* from, int* beginswith_col, char beginswith_str[], int* contains_col, char contains_str[]){
+    if (strcmp(argv[i], "rows") == 0){
+        flags.rows = true;
+        *from = atoi(argv[i+1]);
+        *to = atoi(argv[i+2]);
+    } else if (strcmp(argv[i], "beginswith") == 0){
+        flags.beginswith = true;
+        *beginswith_col = atoi(argv[i+1]);
+        strcpy(&beginswith_str[0], argv[i+2]);
+    } else if (strcmp(argv[i], "contains") == 0){
+        flags.contains = true;
+        *contains_col = atoi(argv[i+1]);
+        strcpy(&contains_str[0], argv[i+2]);
+    }
 }
 
 /// remove characters in string (currently unused) ///
@@ -126,10 +153,12 @@ char *remdup(char string[], int n){
 
 int main(int argc, char *argv[])
 {
-    if (argc <= 2){
-        printf("Insufficient amount of input parameters.\n");
+    if (argc <= 3){
+        fprintf(stderr,"Error: Insufficient number of input parameters.\n");
         return 1;
     }
+
+    flags_t flags = {false, false, false};
 
     //bool flag1 = false;
     bool flag2 = false;
@@ -143,18 +172,21 @@ int main(int argc, char *argv[])
 
     int to, from = 0; // for rows selection
     while (fgets(row, MAX_ROW_LENGTH, stdin) != NULL){
-        to++;}
+        to++;
+    }
 
-    bool beginswith_flag = false;
     int beginswith_col;
     char beginswith_str[10];
 
-    bool contains_flag = false;
     int contains_col;
     char contains_str[10];
 
+
+    check_rowselect(3, argv, flags, &to, &from, &beginswith_col, beginswith_str, &contains_col, contains_str); // TRY TO MERGE THE COL AND STR VARIABLES IN HERE IN THE FUTURE!!!
+
+
     if (strcmp(argv[1], "-d") != 0){
-        printf("Error: Expecting '-d', received %s.\n", argv[1]);
+        fprintf(stderr,"Error: Expecting '-d', received %s.\n", argv[1]);
         return 1;
     } else { //initialize delimiter var as a 1D array and load delimiters from input arguments
         if (strcmp(argv[2], "irow") != 0 && strcmp(argv[2], "arow") != 0 && strcmp(argv[2], "drow") != 0 && strcmp(argv[2], "drows") != 0 && strcmp(argv[2], "icol") != 0 && strcmp(argv[2], "acol") != 0 && strcmp(argv[2], "dcol") != 0 && strcmp(argv[2], "dcols") != 0){
@@ -162,27 +194,25 @@ int main(int argc, char *argv[])
             int delim_len = sizeof(delim)/sizeof(delim[0]); // create a variable to save the size of the delimiters string into and calculate it
             remdup(delim, delim_len);                       // then remove any duplicate characters
             //delim_first = delim[0];
+            printf ("argc is %i \n",argc);
             printf ("argv[2] is %s \n",argv[2]);            //! REMEMBER TO
             printf ("delim is %s \n",delim);                //! DELETE THESE
             printf ("delim[0] is %c \n",delim[0]);          //! LATER ON
             printf ("delim[1] is %c \n",delim[1]);          //! YOU MONKEY
         }
     }
-  
+
+
+
+    while (fgets(row, MAX_ROW_LENGTH, stdin) != NULL){
+        // CHECK FOR beginswith_flag AND contains_flag !!!!!!!!!!!!
+        // AND SOMEHOW IMPLEMENT STARTING AND ENDING ROW !!!!!!!!!!
+        print_stdin(row);
+    }
+
     for (int i = 3; i < argc; i++) //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
     {
-        if (strcmp(argv[i], "rows") == 0){
-            from = atoi(argv[i+1]);
-            to = atoi(argv[i+2]);
-        } else if (strcmp(argv[i], "beginswith") == 0){
-            beginswith_flag = true;
-            beginswith_col = atoi(argv[i+1]);
-            strcpy(beginswith_str, argv[i+2]);
-        } else if (strcmp(argv[i], "contains") == 0){
-            contains_flag = true;
-            contains_col = atoi(argv[i+1]);
-            strcpy(contains_str, argv[i+2]);
-        } else if (strcmp(argv[i], "irow") == 0){
+        if (strcmp(argv[i], "irow") == 0){
             strncat(comms, "irow\n", 6);
             strncat(comms, argv[i+1], 5);
             strncat(comms, "\n", 2);
@@ -238,22 +268,18 @@ int main(int argc, char *argv[])
     }
 
 
-    while (fgets(row, MAX_ROW_LENGTH, stdin) != NULL){
-        // CHECK FOR beginswith_flag AND contains_flag !!!!!!!!!!!!
-        // AND SOMEHOW IMPLEMENT STARTING AND ENDING ROW !!!!!!!!!!
-        random_func(row);
-    }
+
 
 /********************** 
 *** CHECKING OUTPUT **/
     printf("commands are: %s\n",comms);
     printf("from row %d\n",from);
     printf("to row %d\n",to);
-    if (beginswith_flag == true){
+    if (flags.beginswith == true){
         printf("process only rows whose cols at number: %d\n",beginswith_col);
         printf("begin with string: %s\n",beginswith_str);
     }
-    if (contains_flag == true){
+    if (flags.contains == true){
         printf("process only rows whose cols at number: %d\n",contains_col);
         printf("contain string: %s\n",contains_str);
     }

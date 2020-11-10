@@ -1,8 +1,0 @@
-argv[2] is :a?baa?? 
-delim is :a?b 
-delim[0] is : 
-delim[1] is a 
-commands are: 
-from row 0
-to row 14
-Hooray! I reached the end!
