@@ -156,14 +156,14 @@ char *remdup(char string[], int n){
 
 int main(int argc, char *argv[])
 {
-    if (argc <= 3){
+    if (argc <= 2){
         fprintf(stderr,"Error: Insufficient number of input parameters.\n");
         return 1;
     }
 
     flags_t flags = {false, false, false};
 
-    //bool flag1 = false;
+    bool flag1 = false;
     bool flag2 = false;
 
     char delim[MAX];    // array for delimiters
@@ -173,6 +173,8 @@ int main(int argc, char *argv[])
     char row[MAX_ROW_LENGTH];
     char comms[100];
 
+    int start = 3;
+
     int from, to = 0; // for rows selection
 
     int beginswith_col;
@@ -180,10 +182,6 @@ int main(int argc, char *argv[])
 
     int contains_col;
     char contains_str[10];
-
-
-    check_rowselect(3, argv, &flags, &to, &from, &beginswith_col, beginswith_str, &contains_col, contains_str); // TRY TO MERGE THE COL AND STR VARIABLES IN HERE IN THE FUTURE!!!
-
 
     if (strcmp(argv[1], "-d") != 0){
         fprintf(stderr,"Error: Expecting '-d', received %s.\n", argv[1]);
@@ -196,132 +194,81 @@ int main(int argc, char *argv[])
             remdup(delim, delim_len);                       // then remove any duplicate characters
             //strncpy(&delim_first[0], &delim[0], 1);
         } else {
-            fprintf(stderr,"It would appear the argument in place of the delimiter looks an awful lot like a command. \nDid you perhaps forget to enter a delimiter?\n");
-            return 1;
+            fprintf(stderr,"It would appear the argument in place of the delimiter looks an awful lot like a command, setting it to default (space) instead. \nDid you perhaps forget to enter a delimiter? \n");
+            --start;
         }
     }
 
+/// CHECK FOR A COMMAND FOR ROWS SELECTION
+    check_rowselect(start, argv, &flags, &to, &from, &beginswith_col, beginswith_str, &contains_col, contains_str); // TRY TO MERGE THE COL AND STR VARIABLES IN HERE IN THE FUTURE!!!
 
-
+    //printf("just checking, start = %d?\n", start);
     while (fgets(row, MAX_ROW_LENGTH, stdin) != NULL){
-        for (int i = 3; i < argc; i++) //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
-        {
-        if (strcmp(argv[i], "irow") == 0){
-            strncat(comms, "irow\n", 6);
-            strncat(comms, argv[i+1], 5);
-            strncat(comms, "\n", 2);
-        } else if (strcmp(argv[i], "arow") == 0){
-            strncat(comms, "arow\n", 6);
-        } else if (strcmp(argv[i], "drow") == 0){
-            strncat(comms, "drow\n", 6);
-            strncat(comms, argv[i+1], 5);
-            strncat(comms, "\n", 2);
-        } else if (strcmp(argv[i], "drows") == 0){
-            strncat(comms, "drows\n", 7);
-            strncat(comms, argv[i+1], 5);
-            strncat(comms, "\n", 2);
-            strncat(comms, argv[i+2], 5);
-            strncat(comms, "\n", 2);
-        } else if (strcmp(argv[i], "icol") == 0){
-            printf("icol reached.\n");
-        } else if (strcmp(argv[i], "acol") == 0){
-            printf("acol reached.\n");
-        } else if (strcmp(argv[i], "dcol") == 0){
-            printf("dcol reached.\n");
-        } else if (strcmp(argv[i], "dcols") == 0){
-            printf("dcols reached.\n");
-        } else if (flag2 == false){
-            if (strcmp(argv[i], "cset") == 0){
-                printf("cset reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "tolower") == 0){
-                printf("tolower reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "toupper") == 0){
-                printf("toupper reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "round") == 0){
-                printf("round reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "int") == 0){
-                printf("int reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "copy") == 0){
-                printf("copy reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "swap") == 0){
-                printf("swap reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "move") == 0){
-                printf("move reached.\n");
-                flag2 = true;
-            }
-        } else {
-            printf ("no args\n");
+        if (flag1 == true){
+            flag1 = false;
         }
-    }
+        for (int i = start; i < argc; i++){ //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
+            if (strcmp(argv[i], "irow") == 0){
+                printf("irow reached.\n");
+                //I HAVE TO IMPLEMENT IT SO IT READS THE NEXT ARGUMENT AS WELL BECAUSE THAT'S WHERE THE NUMBER WILL BE
+                ++i; //AND THEN SKIP THAT ARGUMENT IN NEXT ITERATION (I don't think much would happen honestly since it would just not recognise that argument and then move on, but, y'know, let's try and make it retard-friendly)(also what if it was calling two functions lol)(okay I do actually need to increment the i here)(I'm dumb)(Should stop talking to myself)(hahaha)(ha)
+            } else if (strcmp(argv[i], "arow") == 0){
+                printf("arow reached.\n");
+            } else if (strcmp(argv[i], "drow") == 0){
+                printf("drow reached.\n");
+                ++i;
+            } else if (strcmp(argv[i], "drows") == 0){
+                printf("drows reached.\n");
+                ++i;
+                ++i; // ALSO SOME COMMANDS TAKE UP THREE ARGS (NOT JUST A NUMBER BUT ALSO A STRING)
+            } else if (strcmp(argv[i], "icol") == 0){
+                printf("icol reached.\n");
+                ++i;
+            } else if (strcmp(argv[i], "acol") == 0){
+                printf("acol reached.\n");
+            } else if (strcmp(argv[i], "dcol") == 0){
+                printf("dcol reached.\n");
+                ++i;
+            } else if (strcmp(argv[i], "dcols") == 0){
+                printf("dcols reached.\n");
+                ++i;
+                ++i;
+            } else if (flag1 == false){
+                if (strcmp(argv[i], "cset") == 0){
+                    printf("cset reached.\n");
+                    flag1 = true;
+                } else if (strcmp(argv[i], "tolower") == 0){
+                    printf("tolower reached.\n");
+                    flag1 = true;
+                } else if (strcmp(argv[i], "toupper") == 0){
+                    printf("toupper reached.\n");
+                    flag1 = true;
+                } else if (strcmp(argv[i], "round") == 0){
+                    printf("round reached.\n");
+                    flag1 = true;
+                } else if (strcmp(argv[i], "int") == 0){
+                    printf("int reached.\n");
+                    flag1 = true;
+                } else if (strcmp(argv[i], "copy") == 0){
+                    printf("copy reached.\n");
+                    flag1 = true;
+                } else if (strcmp(argv[i], "swap") == 0){
+                    printf("swap reached.\n");
+                    flag1 = true;
+                } else if (strcmp(argv[i], "move") == 0){
+                    printf("move reached.\n");
+                    flag1 = true;
+                }
+            } else if (flag2 == false){
+                flag2 = true;
+                fprintf (stderr,"No commands, or two commands for data processing simultaneously, entered. \nThe program will either do nothing or ignore the second data processing command. \n");
+            }
+        }
         // CHECK FOR beginswith_flag AND contains_flag !!!!!!!!!!!!
         // AND SOMEHOW IMPLEMENT STARTING AND ENDING ROW !!!!!!!!!!
         print_stdin(row);
     }
 
-
-    for (int i = 3; i < argc; i++) //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
-    {
-        if (strcmp(argv[i], "irow") == 0){
-            strncat(comms, "irow\n", 6);
-            strncat(comms, argv[i+1], 5);
-            strncat(comms, "\n", 2);
-        } else if (strcmp(argv[i], "arow") == 0){
-            strncat(comms, "arow\n", 6);
-        } else if (strcmp(argv[i], "drow") == 0){
-            strncat(comms, "drow\n", 6);
-            strncat(comms, argv[i+1], 5);
-            strncat(comms, "\n", 2);
-        } else if (strcmp(argv[i], "drows") == 0){
-            strncat(comms, "drows\n", 7);
-            strncat(comms, argv[i+1], 5);
-            strncat(comms, "\n", 2);
-            strncat(comms, argv[i+2], 5);
-            strncat(comms, "\n", 2);
-        } else if (strcmp(argv[i], "icol") == 0){
-            printf("icol reached.\n");
-        } else if (strcmp(argv[i], "acol") == 0){
-            printf("acol reached.\n");
-        } else if (strcmp(argv[i], "dcol") == 0){
-            printf("dcol reached.\n");
-        } else if (strcmp(argv[i], "dcols") == 0){
-            printf("dcols reached.\n");
-        } else if (flag2 == false){
-            if (strcmp(argv[i], "cset") == 0){
-                printf("cset reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "tolower") == 0){
-                printf("tolower reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "toupper") == 0){
-                printf("toupper reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "round") == 0){
-                printf("round reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "int") == 0){
-                printf("int reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "copy") == 0){
-                printf("copy reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "swap") == 0){
-                printf("swap reached.\n");
-                flag2 = true;
-            } else if (strcmp(argv[i], "move") == 0){
-                printf("move reached.\n");
-                flag2 = true;
-            }
-        } else {
-            printf ("no args\n");
-        }
-    }
 
 
 
