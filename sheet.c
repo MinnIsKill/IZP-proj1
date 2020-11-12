@@ -102,11 +102,30 @@ typedef struct {
     bool arow;
 } flags_t;
 
+int calc_cols(char* row, char* delim){
+    int tmp = 1;
+    for (int i = 0; row[i] != '\0'; i++){
+        for (int j = 0; delim[j] != '\0'; j++){
+            if (row[i] == delim[j]){
+                tmp++;
+            }
+        }
+    }
+    return tmp;
+}
+
+void irow(char* delim, int cols){
+    for(int i = 0; i < cols; i++){
+        printf("%c",delim[0]);
+    }
+    printf("\n");
+}
+
 void arow(char* row, char* delim, flags_t* flags){
     int i = 0;
-    while (row[i] != '\0'){
+    while (row[i] != '\0'){ // end of row is [\n][\0]
         i++;
-    }   // end of row is [\n][\0]
+    }
     if (flags->arow == true){
         ++i;
     }
@@ -180,13 +199,14 @@ int main(int argc, char *argv[])
     bool flag2 = false;
 
     char delim[MAX];    // array for delimiters
-    //char delim_first[2];   // first char of delim string, supposed to be used as a separator in final file
     delim[0] = ' ';     // set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
 
     char row[MAX_ROW_LENGTH];
-    //char comms[100];
 
     int start = 3;
+
+    int cols = 0; //number of columns
+    int curr_row = 0; //currently printed row
 
     int from, to = 0; // for rows selection
 
@@ -220,11 +240,19 @@ int main(int argc, char *argv[])
         if (flag1 == true){
             flag1 = false;
         }
+        curr_row++;
         for (int i = start; i < argc; i++){ //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
+            cols = calc_cols(row,delim);
+            //printf("number of cols (before function call) is: %d\n",cols);
             if (strcmp(argv[i], "irow") == 0){
-                printf("irow reached.\n");
-                //I HAVE TO IMPLEMENT IT SO IT READS THE NEXT ARGUMENT AS WELL BECAUSE THAT'S WHERE THE NUMBER WILL BE
-                ++i; //AND THEN SKIP THAT ARGUMENT IN NEXT ITERATION (I don't think much would happen honestly since it would just not recognise that argument and then move on, but, y'know, let's try and make it retard-friendly)(also what if it was calling two functions lol)(okay I do actually need to increment the i here)(I'm dumb)(Should stop talking to myself)(hahaha)(ha)
+                //strtol?
+                char *ptr;
+                long ret;
+                ret = strtol(argv[i+1], &ptr, 10);
+                if (ret == curr_row){
+                    irow(delim,cols);
+                }
+                ++i;
             } else if (strcmp(argv[i], "arow") == 0){
                 arow(row,delim,&flags);
             } else if (strcmp(argv[i], "drow") == 0){
