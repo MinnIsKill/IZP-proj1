@@ -70,7 +70,7 @@ rcount C N M - obdobne jako rsum, avsak vysledna hodnota predstavuje pocet nepra
 **/
 
 /**     LORD GIVE ME THE MENTAL CAPACITY TO REMEMBER THESE, but in the meantime, this cheatsheet should suffice.
-GitHub commit flow: $ git add .
+GitHub push flow:   $ git add .
                     $ git commit -m "message"
                     $ git push --set-upstream origin main   (where 'main' is name of branch to commit to)
 
@@ -99,14 +99,22 @@ typedef struct {
     bool rows;
     bool beginswith;
     bool contains;
+    bool arow;
 } flags_t;
 
-/**void arow(){
-    for (i = 0; string[i] != '\0'; i++){
-        ;
+void arow(char* row, char* delim, flags_t* flags){
+    int i = 0;
+    while (row[i] != '\0'){
+        i++;
+    }   // end of row is [\n][\0]
+    if (flags->arow == true){
+        ++i;
     }
-    printf("%s",delim[0]);
-}**/
+    row[i-2] = delim[0];
+    row[i-1] = '\n';
+    row[i] = '\0';
+    flags->arow = true;
+}
 
 void print_stdin(char* row){
     printf("%s",row);
@@ -166,7 +174,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    flags_t flags = {false, false, false};
+    flags_t flags = {false, false, false, false};
 
     bool flag1 = false;
     bool flag2 = false;
@@ -218,7 +226,7 @@ int main(int argc, char *argv[])
                 //I HAVE TO IMPLEMENT IT SO IT READS THE NEXT ARGUMENT AS WELL BECAUSE THAT'S WHERE THE NUMBER WILL BE
                 ++i; //AND THEN SKIP THAT ARGUMENT IN NEXT ITERATION (I don't think much would happen honestly since it would just not recognise that argument and then move on, but, y'know, let's try and make it retard-friendly)(also what if it was calling two functions lol)(okay I do actually need to increment the i here)(I'm dumb)(Should stop talking to myself)(hahaha)(ha)
             } else if (strcmp(argv[i], "arow") == 0){
-                printf("arow reached.\n");
+                arow(row,delim,&flags);
             } else if (strcmp(argv[i], "drow") == 0){
                 printf("drow reached.\n");
                 ++i;
@@ -272,6 +280,7 @@ int main(int argc, char *argv[])
         // CHECK FOR beginswith_flag AND contains_flag !!!!!!!!!!!!
         // AND SOMEHOW IMPLEMENT STARTING AND ENDING ROW !!!!!!!!!!
         print_stdin(row);
+        flags.arow = false;
     }
 
 
