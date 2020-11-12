@@ -101,7 +101,12 @@ typedef struct {
     bool contains;
 } flags_t;
 
-
+/**void arow(){
+    for (i = 0; string[i] != '\0'; i++){
+        ;
+    }
+    printf("%s",delim[0]);
+}**/
 
 void print_stdin(char* row){
     printf("%s",row);
@@ -171,7 +176,7 @@ int main(int argc, char *argv[])
     delim[0] = ' ';     // set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
 
     char row[MAX_ROW_LENGTH];
-    char comms[100];
+    //char comms[100];
 
     int start = 3;
 
@@ -282,7 +287,7 @@ int main(int argc, char *argv[])
     printf ("delim[1] is %c \n",delim[1]);          //! YOU MONKEY
     //printf ("first delimiter is %s \n",delim_first);
 
-    printf("commands are: %s\n",comms);
+    //printf("commands are: %s\n",comms);
     if (flags.rows == true){
         printf("work only from row [%d] to row [%d]\n",from,to);
     }
