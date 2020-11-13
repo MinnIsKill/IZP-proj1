@@ -1,3 +1,7 @@
+/**
+ * @Author: Vojtěch Kališ, (xkalis03@stud.fit.vutbr.cz)
+ **/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -95,13 +99,22 @@ VSCode Keybind-sheet:  CTRL+SHIFT+B -> BUILD
     }
 **/
 
+
+/**
+ * [STRUCTURES]
+**/
 typedef struct {
     bool rows;
     bool beginswith;
     bool contains;
     bool arow;
+    bool argcheck;
 } flags_t;
 
+
+/**
+ * [AUXILIARY] FUNCTIONS
+**/
 int calc_cols(char* row, char* delim){
     int tmp = 1;
     for (int i = 0; row[i] != '\0'; i++){
@@ -112,27 +125,6 @@ int calc_cols(char* row, char* delim){
         }
     }
     return tmp;
-}
-
-void irow(char* delim, int cols){
-    for(int i = 0; i < cols; i++){
-        printf("%c",delim[0]);
-    }
-    printf("\n");
-}
-
-void arow(char* row, char* delim, flags_t* flags){
-    int i = 0;
-    while (row[i] != '\0'){ // end of row is [\n][\0]
-        i++;
-    }
-    if (flags->arow == true){
-        ++i;
-    }
-    row[i-2] = delim[0];
-    row[i-1] = '\n';
-    row[i] = '\0';
-    flags->arow = true;
 }
 
 void print_stdin(char* row){
@@ -157,8 +149,8 @@ void check_rowselect(int i, char *argv[], flags_t* flags, int* to, int* from, in
 
 /// remove characters in string (currently unused) ///
 void remchar(char *string, char chr){
-    int i, j = 0;
-    for (i = 0; string[i] != '\0'; i++){ /* 'i' moves through all of original 'string' */
+    int j = 0;
+    for (int i = 0; string[i] != '\0'; i++){ /* 'i' moves through all of original 'string' */
         if (string[i] != chr){
             string[j++] = string[i]; /* 'j' only moves after we write a non-'chr' */
         }
@@ -183,6 +175,41 @@ char *remdup(char string[], int n){
 }
 
 
+/**
+ * [COMMANDS] FUNCTIONS
+**/
+// irow R - vlozi radek tabulky pred radek R > 0 (insert-row).
+void irow(char* delim, int cols){
+    for(int i = 0; i < cols-1; i++){
+        printf("%c",delim[0]);
+    }
+    printf("\n");
+}
+//arow - prida novy radek tabulky na konec tabulky (append-row).
+void arow(char* row, char* delim, flags_t* flags){
+    int i = 0;
+    while (row[i] != '\0'){ // end of row is [\n][\0]
+        i++;
+    }
+    if (flags->arow == true){
+        ++i;
+    }
+    row[i-2] = delim[0];
+    row[i-1] = '\n';
+    row[i] = '\0';
+    flags->arow = true;
+}
+// drow R - odstrani radek cislo R > 0 (delete-row).
+void drow(char* row){
+    int i = 0;
+    while(i != '\0'){
+        row[i] = ' ';
+    }
+    row[i-1] = '\n';
+    row[i] = '\0';
+}
+
+
 
 
 
@@ -193,12 +220,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    flags_t flags = {false, false, false, false};
+    flags_t flags = {false, false, false, false, false};
 
     bool flag1 = false;
     bool flag2 = false;
 
     char delim[MAX];    // array for delimiters
+    int delim_len = 0;
     delim[0] = ' ';     // set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
 
     char row[MAX_ROW_LENGTH];
@@ -210,7 +238,7 @@ int main(int argc, char *argv[])
 
     int from, to = 0; // for rows selection
 
-    int beginswith_col;
+    int beginswith_col = 0;
     char beginswith_str[10];
 
     int contains_col;
@@ -223,7 +251,7 @@ int main(int argc, char *argv[])
         if (strcmp(argv[2], "irow") != 0 && strcmp(argv[2], "arow") != 0 && strcmp(argv[2], "drow") != 0 && strcmp(argv[2], "drows") != 0 && strcmp(argv[2], "icol") != 0 && strcmp(argv[2], "acol") != 0 && strcmp(argv[2], "dcol") != 0 && strcmp(argv[2], "dcols") != 0 &&
         strcmp(argv[2], "cset") != 0 && strcmp(argv[2], "tolower") != 0 && strcmp(argv[2], "toupper") != 0 && strcmp(argv[2], "round") != 0 && strcmp(argv[2], "int") != 0 && strcmp(argv[2], "copy") != 0 && strcmp(argv[2], "swap") != 0 && strcmp(argv[2], "move") != 0){
             strcpy(delim, argv[2]);
-            int delim_len = sizeof(delim)/sizeof(delim[0]); // create a variable to save the size of the delimiters string into and calculate it
+            delim_len = sizeof(delim)/sizeof(delim[0]); // create a variable to save the size of the delimiters string into and calculate it
             remdup(delim, delim_len);                       // then remove any duplicate characters
             //strncpy(&delim_first[0], &delim[0], 1);
         } else {
@@ -245,10 +273,23 @@ int main(int argc, char *argv[])
             cols = calc_cols(row,delim);
             //printf("number of cols (before function call) is: %d\n",cols);
             if (strcmp(argv[i], "irow") == 0){
-                //strtol?
                 char *ptr;
                 long ret;
                 ret = strtol(argv[i+1], &ptr, 10);
+                if (*ptr != '\0'){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Passed argument 'R' of 'irow' isn't a number. \nThe program will ignore the command.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret <= 0){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Argument 'R' of 'irow' mustn't be a number <= 0 \nThe program will ignore the command.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
                 if (ret == curr_row){
                     irow(delim,cols);
                 }
@@ -256,7 +297,26 @@ int main(int argc, char *argv[])
             } else if (strcmp(argv[i], "arow") == 0){
                 arow(row,delim,&flags);
             } else if (strcmp(argv[i], "drow") == 0){
-                printf("drow reached.\n");
+                char *ptr;
+                long ret;
+                ret = strtol(argv[i+1], &ptr, 10);
+                if (*ptr != '\0'){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Passed argument 'R' of 'drow' isn't a number \nThe program will ignore the command.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret <= 0){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Argument 'R' of 'drow' mustn't be a number <= 0 \nThe program will ignore the command.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret == curr_row){
+                    drow(row);
+                }
                 ++i;
             } else if (strcmp(argv[i], "drows") == 0){
                 printf("drows reached.\n");
