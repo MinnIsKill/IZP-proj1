@@ -30,12 +30,12 @@ Prikazu pro upravu tabulky muze byt zadano vice. V takovem pripade budou zadany 
 
 Prikazy pro upravu tabulky:
 
-irow R - vlozi radek tabulky pred radek R > 0 (insert-row).
-arow - prida novy radek tabulky na konec tabulky (append-row).
-drow R - odstrani radek cislo R > 0 (delete-row).
-drows N M - odstrani radky N až M (N <= M). V případě N=M se příkaz chová stejně jako drow N.
-icol C - vlozi prazdny sloupec pred sloupec dany cislem C.
-acol - prida prazdny sloupec za posledni sloupec.
+*irow R - vlozi radek tabulky pred radek R > 0 (insert-row).
+*arow - prida novy radek tabulky na konec tabulky (append-row).
+*drow R - odstrani radek cislo R > 0 (delete-row).
+*drows N M - odstrani radky N až M (N <= M). V případě N=M se příkaz chová stejně jako drow N.
+*icol C - vlozi prazdny sloupec pred sloupec dany cislem C.
+*acol - prida prazdny sloupec za posledni sloupec.
 dcol C - odstrani sloupec cislo C.
 dcols N M - odstrani sloupce N az M (N <= M). V pripade N=M se prikaz chova stejne jako dcol N.
 
@@ -108,7 +108,9 @@ typedef struct {
     bool rows;
     bool beginswith;
     bool contains;
+    bool containss;
     //bool acol;
+    bool arow;
     bool argcheck;
 } flags_t;
 
@@ -155,20 +157,20 @@ void check_rowselect(int i, char *argv[], flags_t* flags, int* to, int* from, in
 }
 
 int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, char* str, char* delim, int str_len){
-    //ROWS
+    ///ROWS
     if(flags->rows == true){
         if(curr_row < from || curr_row > to){
             return 0;
         }
         return 1;        
     }
-    //BEGINSWITH
+    ///BEGINSWITH
     if(flags->beginswith == true){
         int tmp1 = 1;
         int i = 0;
-        if (tmp1 == col){
+        if (tmp1 == col){ //if we're searching in first column
             if(row[i] != str[i]){
-                return 0; //WE DIDN'T WIN
+                return 0; //STRING NOT FOUND
             } else {
                 int tmp = 1;
                 for(int k = 0; str[k] != '\0'; k++){
@@ -176,10 +178,10 @@ int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, c
                         tmp++;
                         continue;
                     } else {
-                        return 0;
+                        return 0; //STRING NOT FOUND
                     }
                     if(tmp == str_len){
-                        return 1; //WE WON
+                        return 1; //FOUND THE STRING
                     }
                 }
             }
@@ -196,7 +198,7 @@ int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, c
                             if(row[tmp2] == str[k]){
                                 cnt++;
                                 if(cnt == str_len){
-                                    return 1; //WE WON
+                                    return 1; //FOUND THE STRING
                                 }
                                 tmp2++;
                                 continue;
@@ -209,13 +211,85 @@ int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, c
             }
             i++;
         }
-        return 0; //WE DIDN'T WIN
+        return 0; //STRING NOT FOUND
     }
-    //CONTAINS
+    ///CONTAINS
+
+/** 
+ * 
+ * CONTAINS DOESN'T WORK
+ * 
+**/ 
     if(flags->contains == true){
-        return 0;
+        int tmp1 = 1;
+        int tmp2 = 0;
+        //int tmp3 = 0;
+        int i = 0;
+        int j = 0;
+        int m = 0;
+        int cnt = 0;
+        if (tmp1 == col){ //if we're searching in first column
+            for(int i = 0; row[i] != delim[j] || row[i] != '\0'; i++){ //until we encounter another delimiter or end of row is reached
+                for(j = 0; delim[j] != '\0'; j++){
+                    if(row[i] != str[0]){
+                        cnt = 0; //string interrupted
+                    } else { //we found beginning of string
+                        tmp2 = i;
+                        for(int k = 0; str[k] != '\0'; k++){
+                            if(row[tmp2] == str[k]){
+                                cnt++;
+                                tmp2++;
+                            } else {
+                                cnt = 0;
+                                break; //string interrupted
+                            }
+                        }
+                    }
+                    if(cnt == str_len){
+                            return 1; //FOUND THE STRING
+                    }
+                }
+            }
+            return 0; //STRING NOT FOUND
+        }
+        for(i = 0; row[i] != '\0'; i++){
+            for (j = 0; delim[j] != '\0'; j++){
+                if (row[i] == delim[j]){ //encounter a delimiter
+                    tmp1++;
+                    printf("col is %d, tmp1 is %d\n",col,tmp1);
+                    if((tmp1 == col) && (flags->containss == false)){ //if we found our column
+                        flags->containss = true;
+                        printf("got here\n");
+                        for(int n = i+1; row[n] != delim[m] || row[n] != '\0'; n++){ //until we encounter another delimiter or end of row is reached
+                            for(m = 0; delim[m] != '\0'; m++){
+                                if(row[n] != str[0]){
+                                    cnt = 0; //string interrupted
+                                } else { //we found beginning of string
+                                    tmp2 = n;
+                                    for(int p = 0; str[p] != '\0'; p++){
+                                        if(row[tmp2] == str[p]){
+                                            cnt++;
+                                            tmp2++;
+                                        } else {
+                                            cnt = 0;
+                                            break; //string interrupted
+                                        }
+                                    }
+                                }
+                                if(cnt == str_len){
+                                        return 1; //FOUND THE STRING
+                                }
+                            }
+                            return 0;
+                        }
+                    }
+                }
+            }
+        }
+        return 0; //STRING NOT FOUND
     }
-    return 0;
+    fprintf(stderr,"Error: Unknown error (something went wrong with setting up rowsel functions");
+    return 0; //STRING NOT FOUND
 }
 
 /// remove characters in string (currently unused) ///
@@ -257,8 +331,11 @@ void irow(char* delim, int cols){
     printf("\n");
 }
 /** arow - prida novy radek tabulky na konec tabulky (append-row). **/
-void arow(){
-    ;
+void arow(char* delim, int cols){
+    for(int i = 0; i < cols-1; i++){
+        printf("%c",delim[0]);
+    }
+    printf("\n");
 }
 /** drow R - odstrani radek cislo R > 0 (delete-row). **/
 void drow(char* row){
@@ -275,26 +352,134 @@ void drow(char* row){
 void drows(char* row){
     drow(row);
 }
+/** icol C - vlozi prazdny sloupec pred sloupec dany cislem C. **/
+int icol(char* row, char* delim, long ret){
+    long tmp1 = 0;
+    char strtmp[MAX_ROW_LENGTH];
+    //int len = 0;
+    char ins[2];
+    strncpy(&ins[0], &delim[0], 1);
+    //printf("ins is %s\n",ins);
+    for(int i = 0; row[i] != '\0'; i++){
+        for(int j = 0; delim[j] != '\0'; j++){
+            if(tmp1 == ret-1){
+                strncpy(strtmp, row, i);
+                strtmp[i] = '\0';
+                strcat(strtmp, ins);
+                strcat(strtmp, row + i);
+                memmove(row,strtmp,sizeof(strtmp));
+                return 1;
+            }
+            if(row[i] == delim[j]){
+                tmp1++;
+            }
+        }
+    }
+    return 0;
+}
 /** acol - prida prazdny sloupec za posledni sloupec. **/
-//void acol(char* row, char* delim, flags_t* flags){
 void acol(char* row, char* delim){
     int i = 0;
     char tmp[2] = " ";
     while (row[i] != '\0'){ // end of row is [\n][\0]
         i++;
     }
-    /**if (flags->acol == true){
-        ;
-    }**/
     strncat(row,tmp,1);
     ++i;
     row[i-2] = delim[0];
     row[i-1] = '\n';
     row[i] = '\0';
-    //flags->acol = true;
 }
-
-
+/** dcol C - odstrani sloupec cislo C. **/
+int dcol(char* row, char* delim, long ret){
+    long tmp1 = 0;
+    int tmp2 = 0;
+    int save = 0;
+    int i = 0;
+    char strtmp[MAX_ROW_LENGTH];
+    for(i = 0; row[i] != '\0'; i++){
+        for(int j = 0; delim[j] != '\0'; j++){
+            if(tmp1 == ret-1){
+                save = i;
+                break;
+            }
+            if(row[i] == delim[j]){
+                tmp1++;
+            }
+        }
+        if(save != 0){
+            break;
+        }
+    }
+    if(i == 1){
+        i = -1;
+    }
+    i++;
+    if(row[i] == '\0'){
+        i--;
+    }
+    //printf("i is %d\n",i);
+    for(int m = i; row[m] != '\0'; m++){
+        for(int n = 0; delim[n] != '\0'; n++){
+            if(row[m] == delim[n]){
+                //tmp2 je velikost sloupce ktery chcu odstranit = pocet charu ktere chcu odstranit
+                tmp2++;
+                if (i == 0){
+                    if(row[i] == delim[i]){
+                        if(ret == 1){
+                            --tmp2;
+                        }
+                        strncpy(strtmp, row, i);
+                        strtmp[i] = '\0';
+                        strcat(strtmp, row + tmp2 + 1);
+                        memmove(row,strtmp,sizeof(strtmp));
+                        return 1;
+                    }
+                    strncpy(strtmp, row, i);
+                    strtmp[i] = '\0';
+                    strcat(strtmp, row + tmp2);
+                    memmove(row,strtmp,sizeof(strtmp));
+                    return 1;
+                } else {
+                    strncpy(strtmp, row, i-2);
+                    //printf("strtmp is %s\n",strtmp);
+                    //printf("row is %s\n",row);
+                    strtmp[i-2] = '\0';
+                    //printf("strtmp is %s\n",strtmp);
+                    //printf("row is %s\n",row);
+                    strcat(strtmp, row + tmp2 + i-1);
+                    //printf("strtmp is %s\n",strtmp);
+                    //printf("row is %s\n",row);
+                    memmove(row,strtmp,sizeof(strtmp));
+                    return 1;
+                }
+            } else if(row[m] == '\n'){
+                    strncpy(strtmp, row, i-1);
+                    //printf("strtmp is %s\n",strtmp);
+                    //printf("row is %s\n",row);
+                    strtmp[i-1] = '\0';
+                    //printf("strtmp is %s\n",strtmp);
+                    //printf("row is %s\n",row);
+                    if(strtmp[i-2] == delim[n]){
+                        strncpy(strtmp, row, i-2);
+                        strtmp[i-2] = '\0';
+                    }
+                    strcat(strtmp, row + tmp2 + i);
+                    //printf("strtmp is %s\n",strtmp);
+                    //printf("row is %s\n",row);
+                    memmove(row,strtmp,sizeof(strtmp));
+                    return 1;
+            } else {
+                tmp2++;
+            }
+        }
+    }
+    return 0;
+}
+/** dcols N M - odstrani sloupce N az M (N <= M). V pripade N=M se prikaz chova stejne jako dcol N. **/
+void dcols(char* row, char* delim, long ret){
+    dcol(row, delim, ret);
+}
 
 int main(int argc, char *argv[])
 {
@@ -303,14 +488,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    flags_t flags = {false, false, false, false, false};
+    flags_t flags = {false, false, false, false, false, false, false};
 
     bool flag1 = false;
     bool flag2 = false;
 
     char delim[MAX];    // array for delimiters
     int delim_len = 0;
-    delim[0] = ' ';     // set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
 
     char row[MAX_ROW_LENGTH];
 
@@ -337,6 +521,7 @@ int main(int argc, char *argv[])
             //strncpy(&delim_first[0], &delim[0], 1);
         } else {
             fprintf(stderr,"It would appear the argument in place of the delimiter looks an awful lot like a command, setting it to default (space) instead. \nDid you perhaps forget to enter a delimiter? \n");
+            delim[0] = ' ';     // set it to default ' ' --> (I'm not sure if it isn't set to be a blank space as default already, because the output was the same without this line?? But I'm leaving it in just to be sure lol.)
             --start;
         }
     }
@@ -381,7 +566,7 @@ int main(int argc, char *argv[])
                 }
                 ++i;
             } else if (strcmp(argv[i], "arow") == 0){
-                ;
+                flags.arow = true;
             } else if (strcmp(argv[i], "drow") == 0){
                 char *ptr;
                 long ret;
@@ -435,17 +620,92 @@ int main(int argc, char *argv[])
                 }
                 ++i;
             } else if (strcmp(argv[i], "icol") == 0){
-                printf("icol reached.\n");
+                char *ptr;
+                long ret;
+                ret = strtol(argv[i+1], &ptr, 10);
+                if (*ptr != '\0'){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Passed argument 'C' of 'icol' isn't a number. \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret <= 0){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Argument 'C' of 'icol' mustn't be a number <= 0 \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret > cols){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Argument 'C' of 'icol' mustn't exceed the number of columns in file. To insert a column at the end of each row, use 'acol' instead. \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                icol(row,delim,ret);
                 ++i;
             } else if (strcmp(argv[i], "acol") == 0){
                 //acol(row,delim,&flags);
                 acol(row,delim);
+                cols++;
             } else if (strcmp(argv[i], "dcol") == 0){
-                printf("dcol reached.\n");
+                char *ptr;
+                long ret;
+                ret = strtol(argv[i+1], &ptr, 10);
+                if (*ptr != '\0'){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Passed argument 'C' of 'dcol' isn't a number. \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret <= 0){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Argument 'C' of 'dcol' mustn't be a number <= 0 \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret > cols){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Argument 'C' of 'dcol' mustn't exceed the number of columns in file. \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                dcol(row,delim,ret);
                 ++i;
             } else if (strcmp(argv[i], "dcols") == 0){
-                printf("dcols reached.\n");
-                ++i;
+                char *ptr1, *ptr2;
+                long ret1, ret2;
+                ret1 = strtol(argv[i+1], &ptr1, 10);
+                ret2 = strtol(argv[i+2], &ptr2, 10);
+                if (*ptr1 != '\0' || *ptr2 != '\0'){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: One or both passed arguments 'N' and 'M' of 'dcols' isn't a number. \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret1 <= 0 || ret2 <= 0){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Arguments 'N' and 'M' of 'dcols' mustn't be numbers <= 0 \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret1 > ret2){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: For 'dcols': Argument 'N' mustn't be > than argument 'M' \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                for(int i = ret1; i <= ret2; i++){
+                    dcols(row, delim, i);
+                }
                 ++i;
             } else if (flag1 == false){
                 if (strcmp(argv[i], "cset") == 0){
@@ -478,12 +738,13 @@ int main(int argc, char *argv[])
                 fprintf (stderr,"No commands, or two commands for data processing simultaneously, entered. \nThe program will either do nothing or ignore the second data processing command. \n");
             }
         }
-        // CHECK FOR beginswith_flag AND contains_flag !!!!!!!!!!!!
-        // AND SOMEHOW IMPLEMENT STARTING AND ENDING ROW !!!!!!!!!!
         print_stdin(row);
         //flags.arow = false;
+        flags.containss = false;
     }
-
+    if (flags.arow == true){
+        arow(delim,cols);
+    }
 
 
 
