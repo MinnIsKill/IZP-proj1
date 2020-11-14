@@ -104,10 +104,11 @@ VSCode Keybind-sheet:  CTRL+SHIFT+B -> BUILD
  * [STRUCTURES]
 **/
 typedef struct {
+    bool rowsel;
     bool rows;
     bool beginswith;
     bool contains;
-    bool arow;
+    //bool acol;
     bool argcheck;
 } flags_t;
 
@@ -131,20 +132,90 @@ void print_stdin(char* row){
     printf("%s",row);
 }
 
-void check_rowselect(int i, char *argv[], flags_t* flags, int* to, int* from, int* beginswith_col, char beginswith_str[], int* contains_col, char contains_str[]){
+void check_rowselect(int i, char *argv[], flags_t* flags, int* to, int* from, int* col, char str[], int* str_len){
     if (strcmp(argv[i], "rows") == 0){
         flags->rows = true;
+        flags->rowsel = true;
         *from = atoi(argv[i+1]);
         *to = atoi(argv[i+2]);
     } else if (strcmp(argv[i], "beginswith") == 0){
         flags->beginswith = true;
-        *beginswith_col = atoi(argv[i+1]);
-        strcpy(&beginswith_str[0], argv[i+2]);
+        flags->rowsel = true;
+        *col = atoi(argv[i+1]);
+        strcpy(&str[0], argv[i+2]);
+        *str_len = strlen(str);
+        printf("str_len = %d\n",*str_len);
     } else if (strcmp(argv[i], "contains") == 0){
         flags->contains = true;
-        *contains_col = atoi(argv[i+1]);
-        strcpy(&contains_str[0], argv[i+2]);
+        flags->rowsel = true;
+        *col = atoi(argv[i+1]);
+        strcpy(&str[0], argv[i+2]);
+        *str_len = strlen(str);
     }
+}
+
+int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, char* str, char* delim, int str_len){
+    //ROWS
+    if(flags->rows == true){
+        if(curr_row < from || curr_row > to){
+            return 0;
+        }
+        return 1;        
+    }
+    //BEGINSWITH
+    if(flags->beginswith == true){
+        int tmp1 = 1;
+        int i = 0;
+        if (tmp1 == col){
+            if(row[i] != str[i]){
+                return 0; //WE DIDN'T WIN
+            } else {
+                int tmp = 1;
+                for(int k = 0; str[k] != '\0'; k++){
+                    if(row[tmp] == str[k]){
+                        tmp++;
+                        continue;
+                    } else {
+                        return 0;
+                    }
+                    if(tmp == str_len){
+                        return 1; //WE WON
+                    }
+                }
+            }
+        }
+        while(row[i] != '\0'){
+            for (int j = 0; delim[j] != '\0'; j++){
+                if (row[i] == delim[j]){ //encounter a delimiter
+                    tmp1++;
+                    if(tmp1 == col){
+                        int tmp2 = i;
+                        int cnt = 0;
+                        ++tmp2;
+                        for(int k = 0; str[k] != '\0'; k++){
+                            if(row[tmp2] == str[k]){
+                                cnt++;
+                                if(cnt == str_len){
+                                    return 1; //WE WON
+                                }
+                                tmp2++;
+                                continue;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            i++;
+        }
+        return 0; //WE DIDN'T WIN
+    }
+    //CONTAINS
+    if(flags->contains == true){
+        return 0;
+    }
+    return 0;
 }
 
 /// remove characters in string (currently unused) ///
@@ -178,28 +249,18 @@ char *remdup(char string[], int n){
 /**
  * [COMMANDS] FUNCTIONS
 **/
-// irow R - vlozi radek tabulky pred radek R > 0 (insert-row).
+/** irow R - vlozi radek tabulky pred radek R > 0 (insert-row). **/
 void irow(char* delim, int cols){
     for(int i = 0; i < cols-1; i++){
         printf("%c",delim[0]);
     }
     printf("\n");
 }
-//arow - prida novy radek tabulky na konec tabulky (append-row).
-void arow(char* row, char* delim, flags_t* flags){
-    int i = 0;
-    while (row[i] != '\0'){ // end of row is [\n][\0]
-        i++;
-    }
-    if (flags->arow == true){
-        ++i;
-    }
-    row[i-2] = delim[0];
-    row[i-1] = '\n';
-    row[i] = '\0';
-    flags->arow = true;
+/** arow - prida novy radek tabulky na konec tabulky (append-row). **/
+void arow(){
+    ;
 }
-// drow R - odstrani radek cislo R > 0 (delete-row).
+/** drow R - odstrani radek cislo R > 0 (delete-row). **/
 void drow(char* row){
     int i = 0;
     while(i != '\0'){
@@ -208,8 +269,30 @@ void drow(char* row){
     row[i-1] = '\n';
     row[i] = '\0';
 }
-
-
+/** 
+ * @function drows N M - odstrani radky N až M (N <= M). V případě N=M se příkaz chová stejně jako drow N. 
+**/
+void drows(char* row){
+    drow(row);
+}
+/** acol - prida prazdny sloupec za posledni sloupec. **/
+//void acol(char* row, char* delim, flags_t* flags){
+void acol(char* row, char* delim){
+    int i = 0;
+    char tmp[2] = " ";
+    while (row[i] != '\0'){ // end of row is [\n][\0]
+        i++;
+    }
+    /**if (flags->acol == true){
+        ;
+    }**/
+    strncat(row,tmp,1);
+    ++i;
+    row[i-2] = delim[0];
+    row[i-1] = '\n';
+    row[i] = '\0';
+    //flags->acol = true;
+}
 
 
 
@@ -238,11 +321,9 @@ int main(int argc, char *argv[])
 
     int from, to = 0; // for rows selection
 
-    int beginswith_col = 0;
-    char beginswith_str[10];
-
-    int contains_col;
-    char contains_str[10];
+    int col = 0;  // for beginswith
+    char str[10]; // and contains
+    int str_len = 0;
 
     if (strcmp(argv[1], "-d") != 0){
         fprintf(stderr,"Error: Expecting '-d', received %s.\n", argv[1]);
@@ -261,7 +342,7 @@ int main(int argc, char *argv[])
     }
 
 /// CHECK FOR A COMMAND FOR ROWS SELECTION
-    check_rowselect(start, argv, &flags, &to, &from, &beginswith_col, beginswith_str, &contains_col, contains_str); // TRY TO MERGE THE COL AND STR VARIABLES IN HERE IN THE FUTURE!!!
+    check_rowselect(start, argv, &flags, &to, &from, &col, str, &str_len); // TRY TO MERGE THE COL AND STR VARIABLES IN HERE IN THE FUTURE!!!
 
     //printf("just checking, start = %d?\n", start);
     while (fgets(row, MAX_ROW_LENGTH, stdin) != NULL){
@@ -269,8 +350,13 @@ int main(int argc, char *argv[])
             flag1 = false;
         }
         curr_row++;
-        for (int i = start; i < argc; i++){ //THIS STILL DOESN'T COUNT WITH NO DELIM INITIALIZATION, DON'T FORGET TO LOOK AT IT LATER (might have to change it to a while loop)
+        for (int i = start; i < argc; i++){
             cols = calc_cols(row,delim);
+            if(flags.rowsel == true){
+                if (!rowsel(row, curr_row, from, to, &flags, col, str, delim, str_len)){
+                    break;
+                }
+            }
             //printf("number of cols (before function call) is: %d\n",cols);
             if (strcmp(argv[i], "irow") == 0){
                 char *ptr;
@@ -278,14 +364,14 @@ int main(int argc, char *argv[])
                 ret = strtol(argv[i+1], &ptr, 10);
                 if (*ptr != '\0'){
                     if (flags.argcheck == false){
-                        fprintf(stderr,"Error: Passed argument 'R' of 'irow' isn't a number. \nThe program will ignore the command.\n");
+                        fprintf(stderr,"Error: Passed argument 'R' of 'irow' isn't a number. \nThe program will exit, and process no further commands.\n");
                         flags.argcheck = true;
                     }
                     break;
                 }
                 if (ret <= 0){
                     if (flags.argcheck == false){
-                        fprintf(stderr,"Error: Argument 'R' of 'irow' mustn't be a number <= 0 \nThe program will ignore the command.\n");
+                        fprintf(stderr,"Error: Argument 'R' of 'irow' mustn't be a number <= 0 \nThe program will exit, and process no further commands.\n");
                         flags.argcheck = true;
                     }
                     break;
@@ -295,21 +381,21 @@ int main(int argc, char *argv[])
                 }
                 ++i;
             } else if (strcmp(argv[i], "arow") == 0){
-                arow(row,delim,&flags);
+                ;
             } else if (strcmp(argv[i], "drow") == 0){
                 char *ptr;
                 long ret;
                 ret = strtol(argv[i+1], &ptr, 10);
                 if (*ptr != '\0'){
                     if (flags.argcheck == false){
-                        fprintf(stderr,"Error: Passed argument 'R' of 'drow' isn't a number \nThe program will ignore the command.\n");
+                        fprintf(stderr,"Error: Passed argument 'R' of 'drow' isn't a number. \nThe program will exit, and process no further commands.\n");
                         flags.argcheck = true;
                     }
                     break;
                 }
                 if (ret <= 0){
                     if (flags.argcheck == false){
-                        fprintf(stderr,"Error: Argument 'R' of 'drow' mustn't be a number <= 0 \nThe program will ignore the command.\n");
+                        fprintf(stderr,"Error: Argument 'R' of 'drow' mustn't be a number <= 0 \nThe program will exit, and process no further commands.\n");
                         flags.argcheck = true;
                     }
                     break;
@@ -319,14 +405,41 @@ int main(int argc, char *argv[])
                 }
                 ++i;
             } else if (strcmp(argv[i], "drows") == 0){
-                printf("drows reached.\n");
+                char *ptr1, *ptr2;
+                long ret1, ret2;
+                ret1 = strtol(argv[i+1], &ptr1, 10);
+                ret2 = strtol(argv[i+2], &ptr2, 10);
+                if (*ptr1 != '\0' || *ptr2 != '\0'){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: One or both passed arguments 'N' and 'M' of 'drows' isn't a number. \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret1 <= 0 || ret2 <= 0){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Arguments 'N' and 'M' of 'drows' mustn't be numbers <= 0 \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if (ret1 > ret2){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: For 'drows': Argument 'N' mustn't be > than argument 'M' \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
+                }
+                if ((ret1 == curr_row) || (ret2 == curr_row) || (ret1 <= curr_row && ret2 >= curr_row)){
+                    drows(row);
+                }
                 ++i;
-                ++i; // ALSO SOME COMMANDS TAKE UP THREE ARGS (NOT JUST A NUMBER BUT ALSO A STRING)
             } else if (strcmp(argv[i], "icol") == 0){
                 printf("icol reached.\n");
                 ++i;
             } else if (strcmp(argv[i], "acol") == 0){
-                printf("acol reached.\n");
+                //acol(row,delim,&flags);
+                acol(row,delim);
             } else if (strcmp(argv[i], "dcol") == 0){
                 printf("dcol reached.\n");
                 ++i;
@@ -368,7 +481,7 @@ int main(int argc, char *argv[])
         // CHECK FOR beginswith_flag AND contains_flag !!!!!!!!!!!!
         // AND SOMEHOW IMPLEMENT STARTING AND ENDING ROW !!!!!!!!!!
         print_stdin(row);
-        flags.arow = false;
+        //flags.arow = false;
     }
 
 
@@ -389,10 +502,10 @@ int main(int argc, char *argv[])
         printf("work only from row [%d] to row [%d]\n",from,to);
     }
     if (flags.beginswith == true){
-        printf("process only rows whose columns at number [%d] begin with string [%s]\n",beginswith_col,beginswith_str);
+        printf("process only rows whose columns at number [%d] begin with string [%s]\n",col,str);
     }
     if (flags.contains == true){
-        printf("process only rows whose columns at number [%d] contain string [%s]\n",contains_col,contains_str);
+        printf("process only rows whose columns at number [%d] contain string [%s]\n",col,str);
     }
 /** CHECKING OUTPUT ***
 **********************/
