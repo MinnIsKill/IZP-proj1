@@ -442,31 +442,19 @@ int dcol(char* row, char* delim, long ret){
                     return 1;
                 } else {
                     strncpy(strtmp, row, i-2);
-                    //printf("strtmp is %s\n",strtmp);
-                    //printf("row is %s\n",row);
                     strtmp[i-2] = '\0';
-                    //printf("strtmp is %s\n",strtmp);
-                    //printf("row is %s\n",row);
                     strcat(strtmp, row + tmp2 + i-1);
-                    //printf("strtmp is %s\n",strtmp);
-                    //printf("row is %s\n",row);
                     memmove(row,strtmp,sizeof(strtmp));
                     return 1;
                 }
             } else if(row[m] == '\n'){
                     strncpy(strtmp, row, i-1);
-                    //printf("strtmp is %s\n",strtmp);
-                    //printf("row is %s\n",row);
                     strtmp[i-1] = '\0';
-                    //printf("strtmp is %s\n",strtmp);
-                    //printf("row is %s\n",row);
                     if(strtmp[i-2] == delim[n]){
                         strncpy(strtmp, row, i-2);
                         strtmp[i-2] = '\0';
                     }
                     strcat(strtmp, row + tmp2 + i);
-                    //printf("strtmp is %s\n",strtmp);
-                    //printf("row is %s\n",row);
                     memmove(row,strtmp,sizeof(strtmp));
                     return 1;
             } else {
@@ -477,8 +465,10 @@ int dcol(char* row, char* delim, long ret){
     return 0;
 }
 /** dcols N M - odstrani sloupce N az M (N <= M). V pripade N=M se prikaz chova stejne jako dcol N. **/
-void dcols(char* row, char* delim, long ret){
-    dcol(row, delim, ret);
+void dcols(char* row, char* delim, long ret1, long ret2){
+    for(int i = 0; i <= (ret2 - ret1);i++){
+        dcol(row, delim, ret1);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -703,9 +693,14 @@ int main(int argc, char *argv[])
                     }
                     break;
                 }
-                for(int i = ret1; i <= ret2; i++){
-                    dcols(row, delim, i);
+                if (labs(ret1 - ret2) >= cols-1){
+                    if (flags.argcheck == false){
+                        fprintf(stderr,"Error: Can't delete all columns of table (results in its removal). \nThe program will exit, and process no further commands.\n");
+                        flags.argcheck = true;
+                    }
+                    break;
                 }
+                dcols(row, delim, ret1, ret2);
                 ++i;
             } else if (flag1 == false){
                 if (strcmp(argv[i], "cset") == 0){
