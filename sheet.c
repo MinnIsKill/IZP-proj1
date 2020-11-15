@@ -1,11 +1,15 @@
 /**
- * @Author: Vojtěch Kališ, (xkalis03@stud.fit.vutbr.cz)
+ * @file:   sheet.c | VUT FIT BRNO | project N.1 | IZP
+ * @brief:  
+ * @author: Vojtěch Kališ, (xkalis03@stud.fit.vutbr.cz)
+ * @date:   15.11.2020
  **/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #define MAX 100
 #define MAX_ROW_LENGTH 10242
@@ -100,8 +104,11 @@ VSCode Keybind-sheet:  CTRL+SHIFT+B -> BUILD
 **/
 
 
-/**
- * [STRUCTURES]
+/*****************
+ * [STRUCTURES] *
+*****************/
+/** FLAGS_T
+ * @brief   a structure to store flags in
 **/
 typedef struct {
     bool rowsel;
@@ -115,8 +122,15 @@ typedef struct {
 } flags_t;
 
 
-/**
- * [AUXILIARY] FUNCTIONS
+/**************************
+ * [AUXILIARY] FUNCTIONS *
+**************************/
+/** CALC_COLS
+ * @brief   calculates how many columns there are in the current row by iterating through both the row and the 
+ *          array in which delimiters are stored and searching for a match, incrementing the return value if found.
+ * @param   row is a pointer to the currently printed row
+ * @param   delim is a pointer to the array of delimiters
+ * @return  number of columns on current row
 **/
 int calc_cols(char* row, char* delim){
     int tmp = 1;
@@ -129,11 +143,24 @@ int calc_cols(char* row, char* delim){
     }
     return tmp;
 }
-
+/** PRINT_STDIN
+ * @brief   prints the output
+ * @param   row is pointer to the currently printed row
+**/
 void print_stdin(char* row){
     printf("%s",row);
 }
-
+/** CHECK_ROWSELECT
+ * @brief checks if any commands for row selection were input as arguments, and store their corresponding inputs into appropriate variables
+ * @param i     start, determines from which argv[i] we're looking
+ * @param argv  pointer to arguments input from stdin
+ * @param flags pointer to the structure where flags are stored
+ * @param to    for 'rows': pointer to variable storing the number of the row to which the user wants to work
+ * @param from  for 'rows': pointer to variable storing the number of the row from which the user wants to work
+ * @param col   for 'beginswith' and 'contains': pointer to the number of the column the user wants to work in
+ * @param str   for 'beginswith' and 'contains': the string the user wants to work with
+ * @param str_len for 'beginswith' and 'contains': pointer to the variable storing the length of the string the user wants to work with
+**/
 void check_rowselect(int i, char *argv[], flags_t* flags, int* to, int* from, int* col, char str[], int* str_len){
     if (strcmp(argv[i], "rows") == 0){
         flags->rows = true;
@@ -155,14 +182,27 @@ void check_rowselect(int i, char *argv[], flags_t* flags, int* to, int* from, in
         *str_len = strlen(str);
     }
 }
-
+/** ROWSEL
+ * @brief function to process commands for row selection
+ * @param row   pointer to current row
+ * @param curr_row number of current row
+ * @param from  for 'rows': pointer to variable storing the number of the row from which the user wants to work
+ * @param to    for 'rows': pointer to variable storing the number of the row to which the user wants to work
+ * @param flags pointer to the structure where flags are stored
+ * @param col   for 'beginswith' and 'contains': pointer to the number of the column the user wants to work in
+ * @param str   for 'beginswith' and 'contains': the string the user wants to work with
+ * @param delim pointer to the string storing user-input delimiters
+ * @param str_len for 'beginswith' and 'contains': pointer to the variable storing the length of the string the user wants to work with
+ * @return 0 if current row is to be processed OR we were successful in finding desired string
+ * @return 1 otherwise
+**/
 int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, char* str, char* delim, int str_len){
     ///ROWS
     if(flags->rows == true){
         if(curr_row < from || curr_row > to){
-            return 0;
+            return 1;
         }
-        return 1;        
+        return 0;        
     }
     ///BEGINSWITH
     if(flags->beginswith == true){
@@ -170,7 +210,7 @@ int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, c
         int i = 0;
         if (tmp1 == col){ //if we're searching in first column
             if(row[i] != str[i]){
-                return 0; //STRING NOT FOUND
+                return 1; //STRING NOT FOUND
             } else {
                 int tmp = 1;
                 for(int k = 0; str[k] != '\0'; k++){
@@ -178,10 +218,10 @@ int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, c
                         tmp++;
                         continue;
                     } else {
-                        return 0; //STRING NOT FOUND
+                        return 1; //STRING NOT FOUND
                     }
                     if(tmp == str_len){
-                        return 1; //FOUND THE STRING
+                        return 0; //FOUND THE STRING
                     }
                 }
             }
@@ -198,7 +238,7 @@ int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, c
                             if(row[tmp2] == str[k]){
                                 cnt++;
                                 if(cnt == str_len){
-                                    return 1; //FOUND THE STRING
+                                    return 0; //FOUND THE STRING
                                 }
                                 tmp2++;
                                 continue;
@@ -211,13 +251,13 @@ int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, c
             }
             i++;
         }
-        return 0; //STRING NOT FOUND
+        return 1; //STRING NOT FOUND
     }
     ///CONTAINS
 
 /** 
  * 
- * CONTAINS DOESN'T WORK
+ * CONTAINS ISN'T WORKING
  * 
 **/ 
     if(flags->contains == true){
@@ -246,11 +286,11 @@ int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, c
                         }
                     }
                     if(cnt == str_len){
-                            return 1; //FOUND THE STRING
+                            return 0; //FOUND THE STRING
                     }
                 }
             }
-            return 0; //STRING NOT FOUND
+            return 1; //STRING NOT FOUND
         }
         for(i = 0; row[i] != '\0'; i++){
             for (j = 0; delim[j] != '\0'; j++){
@@ -277,33 +317,42 @@ int rowsel(char* row, int curr_row, int from, int to, flags_t* flags, int col, c
                                     }
                                 }
                                 if(cnt == str_len){
-                                        return 1; //FOUND THE STRING
+                                        return 0; //FOUND THE STRING
                                 }
                             }
-                            return 0;
+                            return 1; //STRING NOT FOUND
                         }
                     }
                 }
             }
         }
-        return 0; //STRING NOT FOUND
+        return 1; //STRING NOT FOUND
     }
     fprintf(stderr,"Error: Unknown error (something went wrong with setting up rowsel functions");
-    return 0; //STRING NOT FOUND
+    return 1; //STRING NOT FOUND
 }
 
-/// remove characters in string (currently unused) ///
+/** REMCHAR
+ * @brief remove called characters in called string
+ * @param string pointer to the original string
+ * @param chr    the character to be removed
+**/
 void remchar(char *string, char chr){
     int j = 0;
-    for (int i = 0; string[i] != '\0'; i++){ /* 'i' moves through all of original 'string' */
+    for (int i = 0; string[i] != '\0'; i++){ // move through all of original 'string'
         if (string[i] != chr){
-            string[j++] = string[i]; /* 'j' only moves after we write a non-'chr' */
+            string[j++] = string[i]; // 'j' only moves after we write a non-'chr'
         }
     }
-   string[j] = '\0'; /* re-null-terminate */
+   string[j] = '\0'; // re-null-terminate
 }
 
-/// remove duplicates in string ///
+/** ROWSEL
+ * @brief remove duplicate characters in string
+ * @param string the string we're working on
+ * @param n      number of characters in string (length of string)
+ * @return string without duplicates
+**/
 char *remdup(char string[], int n){
     int i,j,index = 0;
     for (i = 0; i < n; i++){ // traverse through all characters
@@ -320,24 +369,38 @@ char *remdup(char string[], int n){
 }
 
 
-/**
- * [COMMANDS] FUNCTIONS
+/************************************************
+ * [COMMANDS] FUNCTIONS FOR TABLE MANIPULATION *
+************************************************/
+
+/** IROW
+ * @brief   inserts a row in front of row number 'R' > 0
+ * @pre     R - the row in front of which we're inserting a row
+ * @param   delim pointer to the string storing user-input delimiters
+ * @param   cols  number of columns
 **/
-/** irow R - vlozi radek tabulky pred radek R > 0 (insert-row). **/
 void irow(char* delim, int cols){
     for(int i = 0; i < cols-1; i++){
         printf("%c",delim[0]);
     }
     printf("\n");
 }
-/** arow - prida novy radek tabulky na konec tabulky (append-row). **/
+/** AROW
+ * @brief   appends a new row to the end of table
+ * @param   delim pointer to the string storing user-input delimiters 
+ * @param   cols  number of columns
+**/
 void arow(char* delim, int cols){
     for(int i = 0; i < cols-1; i++){
         printf("%c",delim[0]);
     }
     printf("\n");
 }
-/** drow R - odstrani radek cislo R > 0 (delete-row). **/
+/** DROW
+ * @brief   deletes row number 'R'
+ * @pre     R - number of the row to be deleted
+ * @param   row pointer to the currently printed row
+**/
 void drow(char* row){
     int i = 0;
     while(i != '\0'){
@@ -346,13 +409,23 @@ void drow(char* row){
     row[i-1] = '\n';
     row[i] = '\0';
 }
-/** 
- * @function drows N M - odstrani radky N až M (N <= M). V případě N=M se příkaz chová stejně jako drow N. 
+/** DROWS
+ * @brief   deletes rows 'N' to 'M' (N <= M). In case of N=M, the function works the same way 'drow' would
+ * @pre     N - the number of the row from which we're deleting, M - the number of the row to which we're deleting
+ * @param   row pointer to the currently printed row
 **/
 void drows(char* row){
     drow(row);
 }
-/** icol C - vlozi prazdny sloupec pred sloupec dany cislem C. **/
+/** ICOL
+ * @brief   inserts an empty column in front of column number C
+ * @pre     C - the number of the column in front of which we're inserting an empty column
+ * @param   row pointer to the currently printed row
+ * @param   delim pointer to the string storing user-input delimiters
+ * @param   ret the number of the column in front of which we're inserting
+ * @return  0 if we were able to find the desired column and insert in front of it
+ * @return  1 otherwise
+**/
 int icol(char* row, char* delim, long ret){
     long tmp1 = 0;
     char strtmp[MAX_ROW_LENGTH];
@@ -368,16 +441,20 @@ int icol(char* row, char* delim, long ret){
                 strcat(strtmp, ins);
                 strcat(strtmp, row + i);
                 memmove(row,strtmp,sizeof(strtmp));
-                return 1;
+                return 0;
             }
             if(row[i] == delim[j]){
                 tmp1++;
             }
         }
     }
-    return 0;
+    return 1;
 }
-/** acol - prida prazdny sloupec za posledni sloupec. **/
+/** ACOL
+ * @brief   appends an empty column to the end of the current row
+ * @param   row pointer to the currently printed row
+ * @param   delim pointer to the string storing user-input delimiters
+**/
 void acol(char* row, char* delim){
     int i = 0;
     char tmp[2] = " ";
@@ -390,86 +467,317 @@ void acol(char* row, char* delim){
     row[i-1] = '\n';
     row[i] = '\0';
 }
-/** dcol C - odstrani sloupec cislo C. **/
+/** DCOL
+ * @brief   removes column number 'C'
+ * @pre     C - the column to be removed
+ * @param   row pointer to the currently printed row
+ * @param   delim pointer to the string storing user-input delimiters
+ * @param   ret the number of the column we're removing
+ * @return  0 if the column was found and successfully removed
+ * @return  1 otherwise
+**/
 int dcol(char* row, char* delim, long ret){
-    long tmp1 = 0;
-    int tmp2 = 0;
-    int save = 0;
-    int i = 0;
-    char strtmp[MAX_ROW_LENGTH];
-    for(i = 0; row[i] != '\0'; i++){
-        for(int j = 0; delim[j] != '\0'; j++){
-            if(tmp1 == ret-1){
-                save = i;
-                break;
+    long curr_col = 0;
+    int start_length = 0;
+    int col_length = 0;
+    int i = 0, j = 0, n = 0, m = 0;
+    char end_str[MAX_ROW_LENGTH];
+    char start_str[MAX_ROW_LENGTH];
+    char result[MAX_ROW_LENGTH];
+    char tmp1[20];
+    char tmp2[MAX_ROW_LENGTH];
+    memset(end_str, 0, sizeof(end_str));
+    memset(start_str, 0, sizeof(start_str));
+    memset(result, 0, sizeof(result));
+    memset(tmp1, 0, sizeof(tmp1));
+    memset(tmp2, 0, sizeof(tmp2));
+    if(curr_col == ret-1){
+        for(int i = 0; row[i] != '\0'; i++){
+            for(int j = 0; delim[j] != '\0'; j++){
+                ++col_length;
+                if(row[i] == delim[j]){
+                    break;
+                }
             }
             if(row[i] == delim[j]){
-                tmp1++;
+                break;
             }
         }
-        if(save != 0){
-            break;
-        }
+        strcpy(tmp2,row+col_length-1);
+        strcat(tmp1,tmp2);
+        memmove(row,tmp1,sizeof(tmp1));
+        return 0;
     }
-    if(i == 1){
-        i = -1;
-    }
-    i++;
-    if(row[i] == '\0'){
-        i--;
-    }
-    //printf("i is %d\n",i);
-    for(int m = i; row[m] != '\0'; m++){
-        for(int n = 0; delim[n] != '\0'; n++){
-            if(row[m] == delim[n]){
-                //tmp2 je velikost sloupce ktery chcu odstranit = pocet charu ktere chcu odstranit
-                tmp2++;
-                if (i == 0){
-                    if(row[i] == delim[i]){
-                        if(ret == 1){
-                            --tmp2;
+
+    for(i = 0; row[i] != '\0'; i++){
+        for(int j = 0; delim[j] != '\0'; j++){
+            ++start_length;
+            if(row[i] == delim[j]){
+                ++curr_col;
+            }
+            if(curr_col == ret-1){
+                //printf("curr_col = %ld, ret = %ld\n",curr_col,ret);
+                for(m = i+2; row[m] != '\0'; m++){
+                    for(n = 0; delim[n] != '\0'; n++){
+                        ++col_length;
+                        if(row[m] == delim[n]){
+                            break;
                         }
-                        strncpy(strtmp, row, i);
-                        strtmp[i] = '\0';
-                        strcat(strtmp, row + tmp2 + 1);
-                        memmove(row,strtmp,sizeof(strtmp));
-                        return 1;
                     }
-                    strncpy(strtmp, row, i);
-                    strtmp[i] = '\0';
-                    strcat(strtmp, row + tmp2);
-                    memmove(row,strtmp,sizeof(strtmp));
-                    return 1;
-                } else {
-                    strncpy(strtmp, row, i-2);
-                    strtmp[i-2] = '\0';
-                    strcat(strtmp, row + tmp2 + i-1);
-                    memmove(row,strtmp,sizeof(strtmp));
-                    return 1;
+                    if(row[m] == delim[n]){
+                        break;
+                    }
                 }
-            } else if(row[m] == '\n'){
-                    strncpy(strtmp, row, i-1);
-                    strtmp[i-1] = '\0';
-                    if(strtmp[i-2] == delim[n]){
-                        strncpy(strtmp, row, i-2);
-                        strtmp[i-2] = '\0';
-                    }
-                    strcat(strtmp, row + tmp2 + i);
-                    memmove(row,strtmp,sizeof(strtmp));
-                    return 1;
-            } else {
-                tmp2++;
+                strcpy(end_str,row+start_length+col_length); //will get end string
+                strncpy(start_str,row,start_length-1);
+
+                strcpy(result,start_str);
+                strcat(result,end_str);
+                //printf("result is %s\n",result);
+
+                memmove(row,result,sizeof(result));
+
+                return 0;
             }
         }
     }
-    return 0;
+    return 1;
 }
-/** dcols N M - odstrani sloupce N az M (N <= M). V pripade N=M se prikaz chova stejne jako dcol N. **/
+/** DCOLS (NOTE: there seems to be a mistake happening when this is called from some row (that != the first row) to the last row in that it deletes some rows completely, but I'm running out of time so probs won't get to fixing it)
+ * @brief   removes columns 'N' to 'M' (N <= M). In case of N=M, the function works the same way 'dcol' would.
+ * @pre     N - the column from which we're removing, M - the column to which we're removing
+ * @param   row pointer to the currently printed row
+ * @param   delim pointer to the string storing user-input delimiters
+ * @param   ret1 the number of the columns from which we're removing
+ * @param   ret2 the number of the column to which we're removing
+**/
 void dcols(char* row, char* delim, long ret1, long ret2){
+    long tmp = ret1;
     for(int i = 0; i <= (ret2 - ret1);i++){
-        dcol(row, delim, ret1);
+        dcol(row, delim, tmp);
+        if(ret1 == 1){
+            ++tmp;
+        }
+        /**if(row[0] == '\0'){
+            char tmp[2] = "\0";
+            row[0] = '\n';
+            strcat(row, tmp);
+        }**/
     }
 }
+
+/***********************************************
+ * [COMMANDS] FUNCTIONS FOR DATA MANIPULATION *
+***********************************************/
+
+/** CSET
+ * @brief   do buňky ve sloupci C bude nastaven retezec STR.
+ * @pre     C - the column we're working in, STR - string to put in it
+ * @param   row pointer to the currently printed row
+ * @param   delim pointer to the string storing user-input delimiters
+ * @param   ret the number of the column we're working in
+ * @param   str the replacing string
+**/
+int cset(char* row, char* delim, long ret, char str[]){
+    long curr_col = 0;
+    int start_length = 0;
+    int col_length = 0;
+    int i = 0, j = 0, n = 0, m = 0;
+    char end_str[MAX_ROW_LENGTH];
+    char start_str[MAX_ROW_LENGTH];
+    char result[MAX_ROW_LENGTH];
+    char tmp1[20];
+    char tmp2[MAX_ROW_LENGTH];
+    memset(end_str, 0, sizeof(end_str));
+    memset(start_str, 0, sizeof(start_str));
+    memset(result, 0, sizeof(result));
+    strcpy(tmp1,str-1);
+    if(curr_col == ret-1){
+        for(int i = 0; row[i] != '\0'; i++){
+            for(int j = 0; delim[j] != '\0'; j++){
+                ++col_length;
+                if(row[i] == delim[j]){
+                    break;
+                }
+            }
+            if(row[i] == delim[j]){
+                break;
+            }
+        }
+        strcpy(tmp2,row+col_length-1);
+        strcat(tmp1,tmp2);
+        memmove(row,tmp1,sizeof(tmp1));
+        return 0;
+    }
+
+    for(i = 0; row[i] != '\0'; i++){
+        for(int j = 0; delim[j] != '\0'; j++){
+            ++start_length;
+            if(row[i] == delim[j]){
+                ++curr_col;
+            }
+            if(curr_col == ret-1){
+                //printf("curr_col = %ld, ret = %ld\n",curr_col,ret);
+                for(m = i+2; row[m] != '\0'; m++){
+                    for(n = 0; delim[n] != '\0'; n++){
+                        ++col_length;
+                        if(row[m] == delim[n]){
+                            break;
+                        }
+                    }
+                    if(row[m] == delim[n]){
+                        break;
+                    }
+                }
+                strcpy(end_str,row+start_length+col_length); //will get end string
+                strncpy(start_str,row,start_length);
+
+                strcpy(result,start_str);
+                strcat(result,str-1);
+                strcat(result,end_str);
+                //printf("result is %s\n",result);
+
+                memmove(row,result,sizeof(result));
+
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+/** TOLOWER
+ * @brief   retezec ve sloupci C bude preveden na mala pismena.
+ * @pre     C - the column we're working in
+ * @param   vstupni parametr funkce
+ * @param
+ * @return  co funkce vraci / za jakeho stavu
+**/
+int tolowerf(char* row, char* delim, long ret){
+    long curr_col = 0;
+    int start_length = 0;
+    int col_length = 0;
+    int i = 0, j = 0, n = 0, m = 0;
+    char end_str[MAX_ROW_LENGTH];
+    char start_str[MAX_ROW_LENGTH];
+    char result[MAX_ROW_LENGTH];
+    char tmp1[20];
+    char tmp2[MAX_ROW_LENGTH];
+    memset(end_str, 0, sizeof(end_str));
+    memset(start_str, 0, sizeof(start_str));
+    memset(result, 0, sizeof(result));
+    if(curr_col == ret-1){
+        for(int i = 0; row[i] != '\0'; i++){
+            for(int j = 0; delim[j] != '\0'; j++){
+                ++col_length;
+                if(row[i] == delim[j]){
+                    break;
+                }
+            }
+            if(row[i] == delim[j]){
+                break;
+            }
+        }
+        strcpy(tmp2,row+col_length-1);
+        strcat(tmp1,tmp2);
+        memmove(row,tmp1,sizeof(tmp1));
+        return 0;
+    }
+
+    for(i = 0; row[i] != '\0'; i++){
+        for(int j = 0; delim[j] != '\0'; j++){
+            ++start_length;
+            if(row[i] == delim[j]){
+                ++curr_col;
+            }
+            if(curr_col == ret-1){
+                //printf("curr_col = %ld, ret = %ld\n",curr_col,ret);
+                for(m = i+2; row[m] != '\0'; m++){
+                    for(n = 0; delim[n] != '\0'; n++){
+                        ++col_length;
+                        if(row[m] == delim[n]){
+                            break;
+                        }
+                    }
+                    if(row[m] == delim[n]){
+                        break;
+                    }
+                }
+                strcpy(end_str,row+start_length+col_length); //will get end string
+                strncpy(start_str,row,start_length);
+
+                strcpy(result,start_str);
+                strcat(result,end_str);
+                //printf("result is %s\n",result);
+
+                memmove(row,result,sizeof(result));
+
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+/** TOUPPER
+ * @brief   retezec ve sloupci C bude preveden na velka pismena.
+ * @pre     C - the column we're working in
+ * @param   vstupni parametr funkce
+ * @param
+ * @return  co funkce vraci / za jakeho stavu
+**/
+void toupperf(){
+    ;
+}
+/** ROUND
+ * @brief   ve sloupci C zaokrouhli cislo na cele cislo.
+ * @pre     C - the column we're working in
+ * @param   vstupni parametr funkce
+ * @param
+ * @return  co funkce vraci / za jakeho stavu
+**/
+void roundfunc(){
+    ;
+}
+/** INT
+ * @brief   odstrani desetinnou cast cisla ve sloupci C.
+ * @pre     C - the column we're working in
+ * @param   vstupni parametr funkce
+ * @param
+ * @return  co funkce vraci / za jakeho stavu
+**/
+void intf(){
+    ;
+}
+/** COPY
+ * @brief   prepise obsah bunek ve sloupci M hodnotami ze sloupce N.
+ * @pre     M - the column we're replacing in, N - the column we're replacing from
+ * @param   vstupni parametr funkce
+ * @param
+ * @return  co funkce vraci / za jakeho stavu
+**/
+void copy(){
+    ;
+}
+/** SWAP
+ * @brief   zameni hodnoty bunek ve sloupcich N a M.
+ * @pre     M, N - the columns we're swapping 
+ * @param   vstupni parametr funkce
+ * @param
+ * @return  co funkce vraci / za jakeho stavu
+**/
+void swap(){
+    ;
+}
+/** MOVE
+ * @brief   presune sloupec N před sloupec M.
+ * @pre     N - the column we're moving, M - the column we're moving the N column in front of
+ * @param   vstupni parametr funkce
+ * @param
+ * @return  co funkce vraci / za jakeho stavu
+**/
+void move(){
+    ;
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -704,10 +1012,60 @@ int main(int argc, char *argv[])
                 ++i;
             } else if (flag1 == false){
                 if (strcmp(argv[i], "cset") == 0){
-                    printf("cset reached.\n");
+                    char *ptr1, *ptr2;
+                    long ret1, ret2;
+                    ret1 = strtol(argv[i+1], &ptr1, 20);
+                    ret2 = strtol(argv[i+2], &ptr2, 20);
+                    ret2 = ret2;
+                    if (*ptr1 != '\0'){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Argument 'C' of 'cset' isn't a number. \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    if (ret1 <= 0){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Argument 'C' of 'cset' mustn't be number <= 0 \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    if (ret1 > cols){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Trying to reach past the maximum number of columns. Can't work in a nonexistent column. \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    cset(row,delim,ret1,ptr2);
                     flag1 = true;
                 } else if (strcmp(argv[i], "tolower") == 0){
-                    printf("tolower reached.\n");
+                    char *ptr1;
+                    long ret1;
+                    ret1 = strtol(argv[i+1], &ptr1, 20);
+                    if (*ptr1 != '\0'){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Argument 'C' of 'tolower' isn't a number. \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    if (ret1 <= 0){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Argument 'C' of 'tolower' mustn't be number <= 0 \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    if (ret1 > cols){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Trying to reach past the maximum number of columns. Can't work in a nonexistent column. \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    tolowerf(row,delim,ret1);
                     flag1 = true;
                 } else if (strcmp(argv[i], "toupper") == 0){
                     printf("toupper reached.\n");
@@ -728,7 +1086,7 @@ int main(int argc, char *argv[])
                     printf("move reached.\n");
                     flag1 = true;
                 }
-            } else if (flag2 == false){
+            } else if ((flag2 == false) && (flag1 == true) && (strcmp(argv[i], "cset") == 0 || strcmp(argv[i], "tolower") == 0 || strcmp(argv[i], "toupper") == 0 || strcmp(argv[i], "round") == 0 || strcmp(argv[i], "int") == 0 || strcmp(argv[i], "copy") == 0 || strcmp(argv[i], "swap") == 0 || strcmp(argv[i], "move") == 0)){
                 flag2 = true;
                 fprintf (stderr,"No commands, or two commands for data processing simultaneously, entered. \nThe program will either do nothing or ignore the second data processing command. \n");
             }
