@@ -34,12 +34,12 @@ Prikazu pro upravu tabulky muze byt zadano vice. V takovem pripade budou zadany 
 
 Prikazy pro upravu tabulky:
 
-*irow R - vlozi radek tabulky pred radek R > 0 (insert-row).
-*arow - prida novy radek tabulky na konec tabulky (append-row).
-*drow R - odstrani radek cislo R > 0 (delete-row).
-*drows N M - odstrani radky N až M (N <= M). V případě N=M se příkaz chová stejně jako drow N.
-*icol C - vlozi prazdny sloupec pred sloupec dany cislem C.
-*acol - prida prazdny sloupec za posledni sloupec.
+irow R - vlozi radek tabulky pred radek R > 0 (insert-row).
+arow - prida novy radek tabulky na konec tabulky (append-row).
+drow R - odstrani radek cislo R > 0 (delete-row).
+drows N M - odstrani radky N až M (N <= M). V případě N=M se příkaz chová stejně jako drow N.
+icol C - vlozi prazdny sloupec pred sloupec dany cislem C.
+acol - prida prazdny sloupec za posledni sloupec.
 dcol C - odstrani sloupec cislo C.
 dcols N M - odstrani sloupce N az M (N <= M). V pripade N=M se prikaz chova stejne jako dcol N.
 
@@ -591,6 +591,8 @@ int cset(char* row, char* delim, long ret, char str[]){
     memset(end_str, 0, sizeof(end_str));
     memset(start_str, 0, sizeof(start_str));
     memset(result, 0, sizeof(result));
+    memset(tmp1, 0, sizeof(tmp1));
+    memset(tmp2, 0, sizeof(tmp2));
     strcpy(tmp1,str-1);
     if(curr_col == ret-1){
         for(int i = 0; row[i] != '\0'; i++){
@@ -772,15 +774,20 @@ int roundfunc(char* row, char* delim, long ret){
     long curr_col = 0;
     int start_length = 0;
     int col_length = 0;
+    int reach = 0;
+    char *ptr;
+    char dot[2] = ".";
     int i = 0, j = 0, n = 0, m = 0;
     char end_str[MAX_ROW_LENGTH];
     char start_str[MAX_ROW_LENGTH];
     char result[MAX_ROW_LENGTH];
-    char tmp1[20];
+    char tmp1[MAX_ROW_LENGTH];
     char tmp2[MAX_ROW_LENGTH];
     memset(end_str, 0, sizeof(end_str));
     memset(start_str, 0, sizeof(start_str));
     memset(result, 0, sizeof(result));
+    memset(tmp1, 0, sizeof(tmp1));
+    memset(tmp2, 0, sizeof(tmp2));
     if(curr_col == ret-1){
         for(int i = 0; row[i] != '\0'; i++){
             for(int j = 0; delim[j] != '\0'; j++){
@@ -793,10 +800,33 @@ int roundfunc(char* row, char* delim, long ret){
                 break;
             }
         }
-        strcpy(tmp2,row+col_length-1);
-        printf("tmp2 is %s\n",tmp2);
-        strcat(tmp1,tmp2);
-        memmove(row,tmp1,sizeof(tmp1));
+        strncpy(tmp2,row,col_length-1); //loads the column we want to work with, it's now in 'tmp2'
+        strcpy(end_str,row+start_length+col_length-1); //saves the rest of the row to 'end_str'
+        float f = strtof(tmp2,&ptr);
+        if((*ptr != '\0') && (f != '\0')){
+            fprintf(stderr,"Error: 'round' encountered a column containing more than just a float number.\n The program skipped the column.\n");
+            return 1;
+        }
+        if(f == 0){
+            return 1;
+        }
+        sprintf(tmp1, "%g", f);
+        if(tmp1 != 0){
+            for(int m = 0; (tmp1[m] != '.') && (tmp1[m] != ',');m++){
+                result[m] = tmp1[m];
+                reach++;
+            }
+        }
+        strcat(result,dot);
+        strcat(result,"0");
+        strcat(result,"0");
+        if(tmp1[reach+1] >= '0' && tmp1[reach+1] <= '4'){
+            ;
+        } else if (tmp1[reach+1] >= '5' && tmp1[reach+1] <= '9'){
+            ++result[reach-1];
+        }
+        strcat(result,end_str);
+        memmove(row,result,sizeof(result));
         return 0;
     }
 
@@ -819,16 +849,42 @@ int roundfunc(char* row, char* delim, long ret){
                         break;
                     }
                 }
-                strcpy(end_str,row+start_length+col_length); //will get end string
-                strncpy(start_str,row,start_length);
-
-                strcpy(result,start_str);
-                //strcat(result,str-1);
-                strcat(result,end_str);
+                strcpy(end_str,row+start_length+col_length); //saves end string
+                strncpy(start_str,row,start_length); //saves start string
+                strcpy(tmp2,row+start_length);
+                strncpy(result,tmp2,col_length); //processed column is in result now
                 //printf("result is %s\n",result);
-
-                memmove(row,result,sizeof(result));
-
+                float f = strtof(result,&ptr);
+                memset(tmp2, 0, sizeof(tmp2)); //reset tmp2
+                if((*ptr != '\0') && (f != '\0')){
+                    fprintf(stderr,"Error: 'round' encountered a column containing more than just a float number.\n The program skipped the column.\n");
+                    return 1;
+                }
+                if(f == 0){
+                    return 1;
+                }
+                sprintf(tmp1, "%g", f);
+                if(tmp1 != 0){
+                    for(int m = 0; (tmp1[m] != '.') && (tmp1[m] != ',') && (tmp1[m] != '\0');m++){
+                        tmp2[m] = tmp1[m];
+                        reach++;
+                    }
+                }
+                int lng = strlen(tmp1);
+                if(reach == lng){ //didn't find '.' or ',' meaning the number wasn't a float
+                    return 1;
+                }
+                strcat(tmp2,dot);
+                strcat(tmp2,"0");
+                strcat(tmp2,"0");
+                if(result[reach+1] >= '0' && result[reach+1] <= '4'){
+                    ;
+                } else if (result[reach+1] >= '5' && result[reach+1] <= '9'){
+                    ++tmp2[reach-1];
+                }
+                strcat(start_str,tmp2);
+                strcat(start_str,end_str);
+                memmove(row,start_str,sizeof(start_str));
                 return 0;
             }
         }
@@ -842,8 +898,109 @@ int roundfunc(char* row, char* delim, long ret){
  * @param
  * @return  co funkce vraci / za jakeho stavu
 **/
-void intf(){
-    ;
+int intf(char* row, char* delim, long ret){
+    long curr_col = 0;
+    int start_length = 0;
+    int col_length = 0;
+    int reach = 0;
+    char *ptr;
+    int i = 0, j = 0, n = 0, m = 0;
+    char end_str[MAX_ROW_LENGTH];
+    char start_str[MAX_ROW_LENGTH];
+    char result[MAX_ROW_LENGTH];
+    char tmp1[MAX_ROW_LENGTH];
+    char tmp2[MAX_ROW_LENGTH];
+    memset(end_str, 0, sizeof(end_str));
+    memset(start_str, 0, sizeof(start_str));
+    memset(result, 0, sizeof(result));
+    memset(tmp1, 0, sizeof(tmp1));
+    memset(tmp2, 0, sizeof(tmp2));
+    if(curr_col == ret-1){
+        for(int i = 0; row[i] != '\0'; i++){
+            for(int j = 0; delim[j] != '\0'; j++){
+                ++col_length;
+                if(row[i] == delim[j]){
+                    break;
+                }
+            }
+            if(row[i] == delim[j]){
+                break;
+            }
+        }
+        strncpy(tmp2,row,col_length-1); //loads the column we want to work with, it's now in 'tmp2'
+        strcpy(end_str,row+start_length+col_length-1); //saves the rest of the row to 'end_str'
+        float f = strtof(tmp2,&ptr);
+        if((*ptr != '\0') && (f != '\0')){
+            fprintf(stderr,"Error: 'round' encountered a column containing more than just a float number.\n The program skipped the column.\n");
+            return 1;
+        }
+        if(f == 0){
+            return 1;
+        }
+        sprintf(tmp1, "%g", f);
+        if(tmp1 != 0){
+            for(int m = 0; (tmp1[m] != '.') && (tmp1[m] != ',');m++){
+                result[m] = tmp1[m];
+                reach++;
+            }
+        }
+        strcat(result,end_str);
+        memmove(row,result,sizeof(result));
+        return 0;
+    }
+
+    for(i = 0; row[i] != '\0'; i++){
+        for(int j = 0; delim[j] != '\0'; j++){
+            ++start_length;
+            if(row[i] == delim[j]){
+                ++curr_col;
+            }
+            if(curr_col == ret-1){
+                //printf("curr_col = %ld, ret = %ld\n",curr_col,ret);
+                for(m = i+2; row[m] != '\0'; m++){
+                    for(n = 0; delim[n] != '\0'; n++){
+                        ++col_length;
+                        if(row[m] == delim[n]){
+                            break;
+                        }
+                    }
+                    if(row[m] == delim[n]){
+                        break;
+                    }
+                }
+                strcpy(end_str,row+start_length+col_length); //saves end string
+                strncpy(start_str,row,start_length); //saves start string
+                strcpy(tmp2,row+start_length);
+                strncpy(result,tmp2,col_length); //processed column is in result now
+                //printf("result is %s\n",result);
+                float f = strtof(result,&ptr);
+                memset(tmp2, 0, sizeof(tmp2)); //reset tmp2
+                if((*ptr != '\0') && (f != '\0')){
+                    fprintf(stderr,"Error: 'round' encountered a column containing more than just a float number.\n The program skipped the column.\n");
+                    return 1;
+                }
+                if(f == 0){
+                    return 1;
+                }
+                sprintf(tmp1, "%g", f);
+                if(tmp1 != 0){
+                    for(int m = 0; (tmp1[m] != '.') && (tmp1[m] != ',') && (tmp1[m] != '\0');m++){
+                        tmp2[m] = tmp1[m];
+                        reach++;
+                    }
+                }
+                int lng = strlen(tmp1);
+                if(reach == lng){ //didn't find '.' or ',' meaning the number wasn't a float
+                    return 1;
+                }
+                strcat(start_str,tmp2);
+                strcat(start_str,end_str);
+                memmove(row,start_str,sizeof(start_str));
+                return 0;
+            }
+        }
+    }
+    return 1;
 }
 /** COPY
  * @brief   prepise obsah bunek ve sloupci M hodnotami ze sloupce N.
@@ -1015,6 +1172,7 @@ int main(int argc, char *argv[])
                     drows(row);
                 }
                 ++i;
+                ++i;
             } else if (strcmp(argv[i], "icol") == 0){
                 char *ptr;
                 long ret;
@@ -1138,6 +1296,8 @@ int main(int argc, char *argv[])
                     }
                     cset(row,delim,ret1,ptr2);
                     flag1 = true;
+                    ++i;
+                    ++i;
                 } else if (strcmp(argv[i], "tolower") == 0){
                     char *ptr1;
                     long ret1;
@@ -1165,6 +1325,7 @@ int main(int argc, char *argv[])
                     }
                     tolowerf(row,delim,ret1);
                     flag1 = true;
+                    ++i;
                 } else if (strcmp(argv[i], "toupper") == 0){
                     char *ptr1;
                     long ret1;
@@ -1192,6 +1353,7 @@ int main(int argc, char *argv[])
                     }
                     toupperf(row,delim,ret1);
                     flag1 = true;
+                    ++i;
                 } else if (strcmp(argv[i], "round") == 0){
                     char *ptr1;
                     long ret1;
@@ -1219,9 +1381,35 @@ int main(int argc, char *argv[])
                     }
                     roundfunc(row,delim,ret1);
                     flag1 = true;
+                    ++i;
                 } else if (strcmp(argv[i], "int") == 0){
-                    printf("int reached.\n");
+                    char *ptr1;
+                    long ret1;
+                    ret1 = strtol(argv[i+1], &ptr1, 20);
+                    if (*ptr1 != '\0'){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Argument 'C' of 'int' isn't a number. \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    if (ret1 <= 0){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Argument 'C' of 'int' mustn't be number <= 0 \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    if (ret1 > cols){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Trying to reach past the maximum number of columns. Can't work in a nonexistent column. \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    intf(row,delim,ret1);
                     flag1 = true;
+                    ++i;
                 } else if (strcmp(argv[i], "copy") == 0){
                     printf("copy reached.\n");
                     flag1 = true;
@@ -1234,7 +1422,13 @@ int main(int argc, char *argv[])
                 }
             } else if ((flag2 == false) && (flag1 == true) && (strcmp(argv[i], "cset") == 0 || strcmp(argv[i], "tolower") == 0 || strcmp(argv[i], "toupper") == 0 || strcmp(argv[i], "round") == 0 || strcmp(argv[i], "int") == 0 || strcmp(argv[i], "copy") == 0 || strcmp(argv[i], "swap") == 0 || strcmp(argv[i], "move") == 0)){
                 flag2 = true;
-                fprintf (stderr,"No commands, or two commands for data processing simultaneously, entered. \nThe program will either do nothing or ignore the second data processing command. \n");
+                fprintf (stderr,"Error: Two commands for data processing entered simultaneously. \nThe program will either do nothing or ignore the second data processing command. \n");
+                break;
+            } else if ((flag2 == false) && ((strcmp(argv[i], "irow") != 0 || strcmp(argv[i], "arow") != 0 || strcmp(argv[i], "drow") != 0 || strcmp(argv[i], "drows") != 0 || strcmp(argv[i], "icol") != 0 || strcmp(argv[i], "acol") != 0 || strcmp(argv[i], "dcol") != 0 || strcmp(argv[i], "dcols") != 0 ||
+                       strcmp(argv[i], "cset") != 0 || strcmp(argv[i], "tolower") != 0 || strcmp(argv[i], "toupper") != 0 || strcmp(argv[i], "round") != 0 || strcmp(argv[i], "int") != 0 || strcmp(argv[i], "copy") != 0 || strcmp(argv[i], "swap") != 0 || strcmp(argv[i], "move") != 0))){
+                flag2 = true;
+                fprintf (stderr,"Error: Unknown command entered. \nThe program will exit, and process no further commands.\n");
+                break;
             }
         }
         print_stdin(row);
