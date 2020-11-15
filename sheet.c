@@ -571,7 +571,7 @@ void dcols(char* row, char* delim, long ret1, long ret2){
 ***********************************************/
 
 /** CSET
- * @brief   do buňky ve sloupci C bude nastaven retezec STR.
+ * @brief   overwrites column 'C' with string 'STR'
  * @pre     C - the column we're working in, STR - string to put in it
  * @param   row pointer to the currently printed row
  * @param   delim pointer to the string storing user-input delimiters
@@ -646,13 +646,129 @@ int cset(char* row, char* delim, long ret, char str[]){
     return 1;
 }
 /** TOLOWER
- * @brief   retezec ve sloupci C bude preveden na mala pismena.
+ * @brief   all uppercase characters in column 'C' will be transformed into lowercase characters
+ * @pre     C - the column we're working in
+ * @param   row pointer to the currently printed row
+ * @param   delim pointer to the string storing user-input delimiters
+ * @param   ret the number of the column we're working in
+**/
+int tolowerf(char* row, char* delim, long ret){
+    int diff = 'A' - 'a';
+    long curr_col = 0;
+    int col_length = 0;
+    int i = 0, j = 0, n = 0, m = 0;
+
+    if(curr_col == ret-1){
+        for(int i = 0; row[i] != '\0'; i++){
+            for(int j = 0; delim[j] != '\0'; j++){
+                if (row[i] >= 'A' && row[i] <= 'Z'){
+                    row[i] = row[i] - diff;
+                }
+                ++col_length;
+                if(row[i] == delim[j]){
+                    break;
+                }
+            }
+            if(row[i] == delim[j]){
+                break;
+            }
+        }
+        return 0;
+    }
+
+    for(i = 0; row[i] != '\0'; i++){
+        for(int j = 0; delim[j] != '\0'; j++){
+            if(row[i] == delim[j]){
+                ++curr_col;
+            }
+            if(curr_col == ret-1){
+                //printf("curr_col = %ld, ret = %ld\n",curr_col,ret);
+                for(m = i+1; row[m] != '\0'; m++){
+                    for(n = 0; delim[n] != '\0'; n++){
+                        if (row[m] >= 'A' && row[m] <= 'Z'){
+                            row[m] = row[m] - diff;
+                        }
+                        ++col_length;
+                        if(row[m] == delim[n]){
+                            break;
+                        }
+                    }
+                    if(row[m] == delim[n]){
+                        break;
+                    }
+                }
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+/** TOUPPER
+ * @brief   all lowercase characters in column 'C' will be transformed into uppercase characters
+ * @pre     C - the column we're working in
+ * @param   row pointer to the currently printed row
+ * @param   delim pointer to the string storing user-input delimiters
+ * @param   ret the number of the column we're working in
+**/
+int toupperf(char* row, char* delim, long ret){
+    int diff = 'a' - 'A';
+    long curr_col = 0;
+    int col_length = 0;
+    int i = 0, j = 0, n = 0, m = 0;
+
+    if(curr_col == ret-1){
+        for(int i = 0; row[i] != '\0'; i++){
+            for(int j = 0; delim[j] != '\0'; j++){
+                if (row[i] >= 'a' && row[i] <= 'z'){
+                    row[i] = row[i] - diff;
+                }
+                ++col_length;
+                if(row[i] == delim[j]){
+                    break;
+                }
+            }
+            if(row[i] == delim[j]){
+                break;
+            }
+        }
+        return 0;
+    }
+
+    for(i = 0; row[i] != '\0'; i++){
+        for(int j = 0; delim[j] != '\0'; j++){
+            if(row[i] == delim[j]){
+                ++curr_col;
+            }
+            if(curr_col == ret-1){
+                //printf("curr_col = %ld, ret = %ld\n",curr_col,ret);
+                for(m = i+1; row[m] != '\0'; m++){
+                    for(n = 0; delim[n] != '\0'; n++){
+                        if (row[m] >= 'a' && row[m] <= 'z'){
+                            row[m] = row[m] - diff;
+                        }
+                        ++col_length;
+                        if(row[m] == delim[n]){
+                            break;
+                        }
+                    }
+                    if(row[m] == delim[n]){
+                        break;
+                    }
+                }
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+/** ROUND
+ * @brief   ve sloupci C zaokrouhli cislo na cele cislo.
  * @pre     C - the column we're working in
  * @param   vstupni parametr funkce
  * @param
  * @return  co funkce vraci / za jakeho stavu
 **/
-int tolowerf(char* row, char* delim, long ret){
+int roundfunc(char* row, char* delim, long ret){
     long curr_col = 0;
     int start_length = 0;
     int col_length = 0;
@@ -678,6 +794,7 @@ int tolowerf(char* row, char* delim, long ret){
             }
         }
         strcpy(tmp2,row+col_length-1);
+        printf("tmp2 is %s\n",tmp2);
         strcat(tmp1,tmp2);
         memmove(row,tmp1,sizeof(tmp1));
         return 0;
@@ -706,6 +823,7 @@ int tolowerf(char* row, char* delim, long ret){
                 strncpy(start_str,row,start_length);
 
                 strcpy(result,start_str);
+                //strcat(result,str-1);
                 strcat(result,end_str);
                 //printf("result is %s\n",result);
 
@@ -716,26 +834,6 @@ int tolowerf(char* row, char* delim, long ret){
         }
     }
     return 1;
-}
-/** TOUPPER
- * @brief   retezec ve sloupci C bude preveden na velka pismena.
- * @pre     C - the column we're working in
- * @param   vstupni parametr funkce
- * @param
- * @return  co funkce vraci / za jakeho stavu
-**/
-void toupperf(){
-    ;
-}
-/** ROUND
- * @brief   ve sloupci C zaokrouhli cislo na cele cislo.
- * @pre     C - the column we're working in
- * @param   vstupni parametr funkce
- * @param
- * @return  co funkce vraci / za jakeho stavu
-**/
-void roundfunc(){
-    ;
 }
 /** INT
  * @brief   odstrani desetinnou cast cisla ve sloupci C.
@@ -1068,10 +1166,58 @@ int main(int argc, char *argv[])
                     tolowerf(row,delim,ret1);
                     flag1 = true;
                 } else if (strcmp(argv[i], "toupper") == 0){
-                    printf("toupper reached.\n");
+                    char *ptr1;
+                    long ret1;
+                    ret1 = strtol(argv[i+1], &ptr1, 20);
+                    if (*ptr1 != '\0'){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Argument 'C' of 'toupper' isn't a number. \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    if (ret1 <= 0){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Argument 'C' of 'toupper' mustn't be number <= 0 \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    if (ret1 > cols){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Trying to reach past the maximum number of columns. Can't work in a nonexistent column. \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    toupperf(row,delim,ret1);
                     flag1 = true;
                 } else if (strcmp(argv[i], "round") == 0){
-                    printf("round reached.\n");
+                    char *ptr1;
+                    long ret1;
+                    ret1 = strtol(argv[i+1], &ptr1, 20);
+                    if (*ptr1 != '\0'){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Argument 'C' of 'roundfunc' isn't a number. \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    if (ret1 <= 0){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Argument 'C' of 'roundfunc' mustn't be number <= 0 \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    if (ret1 > cols){
+                        if (flags.argcheck == false){
+                            fprintf(stderr,"Error: Trying to reach past the maximum number of columns. Can't work in a nonexistent column. \nThe program will exit, and process no further commands.\n");
+                            flags.argcheck = true;
+                        }
+                        break;
+                    }
+                    roundfunc(row,delim,ret1);
                     flag1 = true;
                 } else if (strcmp(argv[i], "int") == 0){
                     printf("int reached.\n");
